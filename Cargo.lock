@@ -932,8 +932,8 @@ dependencies = [
  "specs 0.14.3 (registry+https://github.com/rust-lang/crates.io-index)",
  "termion 1.5.3 (registry+https://github.com/rust-lang/crates.io-index)",
  "vek 0.9.7 (registry+https://github.com/rust-lang/crates.io-index)",
- "veloren-client 0.2.0",
- "veloren-common 0.2.0",
+ "veloren-client 0.2.0 (git+https://gitlab.com/veloren/veloren.git)",
+ "veloren-common 0.2.0 (git+https://gitlab.com/veloren/veloren.git)",
 ]
 
 [[package]]
@@ -1010,17 +1010,19 @@ dependencies = [
 [[package]]
 name = "veloren-client"
 version = "0.2.0"
+source = "git+https://gitlab.com/veloren/veloren.git#6a5331e8abea1d6784f2357c8b74696f935d55f9"
 dependencies = [
  "log 0.4.6 (registry+https://github.com/rust-lang/crates.io-index)",
  "specs 0.14.3 (registry+https://github.com/rust-lang/crates.io-index)",
  "threadpool 1.7.1 (registry+https://github.com/rust-lang/crates.io-index)",
  "vek 0.9.7 (registry+https://github.com/rust-lang/crates.io-index)",
- "veloren-common 0.2.0",
+ "veloren-common 0.2.0 (git+https://gitlab.com/veloren/veloren.git)",
 ]
 
 [[package]]
 name = "veloren-common"
 version = "0.2.0"
+source = "git+https://gitlab.com/veloren/veloren.git#6a5331e8abea1d6784f2357c8b74696f935d55f9"
 dependencies = [
  "bincode 1.1.4 (registry+https://github.com/rust-lang/crates.io-index)",
  "dot_vox 4.0.0 (registry+https://github.com/rust-lang/crates.io-index)",
@@ -1208,6 +1210,8 @@ dependencies = [
 "checksum unicode-xid 0.1.0 (registry+https://github.com/rust-lang/crates.io-index)" = "fc72304796d0818e357ead4e000d19c9c174ab23dc11093ac919054d20a6a7fc"
 "checksum vec_map 0.8.1 (registry+https://github.com/rust-lang/crates.io-index)" = "05c78687fb1a80548ae3250346c3db86a80a7cdd77bda190189f2d0a0987c81a"
 "checksum vek 0.9.7 (registry+https://github.com/rust-lang/crates.io-index)" = "41a272c9a959b8d3acd4fdbb83bb20d815976e3ab68b3fa9e0c9519b5dd18478"
+"checksum veloren-client 0.2.0 (git+https://gitlab.com/veloren/veloren.git)" = "<none>"
+"checksum veloren-common 0.2.0 (git+https://gitlab.com/veloren/veloren.git)" = "<none>"
 "checksum version_check 0.1.5 (registry+https://github.com/rust-lang/crates.io-index)" = "914b1a6776c4c929a602fafd8bc742e06365d4bcbe48c30f9cca5824f70dc9dd"
 "checksum winapi 0.2.8 (registry+https://github.com/rust-lang/crates.io-index)" = "167dc9d6949a9b857f3451275e911c3f44255842c1f7a76f33c55103a909087a"
 "checksum winapi 0.3.7 (registry+https://github.com/rust-lang/crates.io-index)" = "f10e386af2b13e47c89e7236a7a14a086791a2b88ebad6df9bf42040195cf770"

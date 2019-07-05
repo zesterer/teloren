@@ -20,14 +20,14 @@ use veloren_common::{
     comp,
     clock::Clock,
     vol::{ReadVol, Vox},
-    terrain::{TerrainMap, Block},
+    terrain::TerrainMap,
 };
 use specs::Join;
 use crate::display::Display;
 
 fn main() {
     let screen_size = Vec2::new(80, 25);
-    let view_distance = 3;
+    let view_distance = 2;
     let tps = 30;
 
     let matches = App::new("Teloren")
@@ -97,7 +97,7 @@ fn main() {
     let mut clock = Clock::start();
     let mut do_glide = false;
 
-    'running: for tick in 0.. {
+    'running: for _ in 0.. {
         let mut controller = comp::Controller::default();
 
         // Handle inputs
@@ -141,12 +141,15 @@ fn main() {
                 let wpos = player_pos + Vec3::new(i, j, 0)
                     .map2(screen_size.into(), |e, sz: u16| e as i32 - sz as i32 / 2);
 
+                let mut block_z = 0;
                 let mut block = None;
 
                 for z in -2..16 {
+                    block_z = wpos.z - z;
+
                     if let Some(b) = ecs
                         .read_resource::<TerrainMap>()
-                        .get(wpos - Vec3::unit_z() * z)
+                        .get(wpos + Vec3::unit_z() * -z)
                         .ok()
                         .filter(|b| !b.is_empty())
                     {
@@ -158,9 +161,9 @@ fn main() {
                 let (col, c) = match block {
                     Some(block) => match block {
                         block if block.is_empty() => (Rgb::one(), ' '),
-                        _ => (block.get_color().unwrap_or(Rgb::one()), '#'),
+                        _ => (block.get_color().unwrap_or(Rgb::one()), if block_z % 2 == 0 { '#' } else { '%' }),
                     },
-                    None => (Rgb::zero(), '?'),
+                    None => (Rgb::new(0, 255, 255), '?'),
                 };
 
                 write!(display, "{}{}", color::Rgb(col.r, col.g, col.b).fg_string(), c).unwrap();
@@ -183,6 +186,19 @@ fn main() {
                 write!(display.at((scr_pos.x as u16, scr_pos.y as u16)), "{}{}", color::White.fg_str(), '@').unwrap();
             }
         }
+
+        write!(display.at((0, screen_size.y + 0)), "======= Controls =======").unwrap();
+        write!(display.at((0, screen_size.y + 1)), "|  wasd - Move         |").unwrap();
+        write!(display.at((0, screen_size.y + 2)), "| space - Jump         |").unwrap();
+        write!(display.at((0, screen_size.y + 3)), "|     x - Attack       |").unwrap();
+        if do_glide {
+        write!(display.at((0, screen_size.y + 4)), "|     g - Stop gliding |").unwrap();
+        } else {
+        write!(display.at((0, screen_size.y + 4)), "|     g - Glide        |").unwrap();
+        }
+        write!(display.at((0, screen_size.y + 5)), "|     r - Respawn      |").unwrap();
+        write!(display.at((0, screen_size.y + 6)), "|     q - Quit         |").unwrap();
+        write!(display.at((0, screen_size.y + 7)), "========================").unwrap();
 
         // Finish drawing
         display.flush();
