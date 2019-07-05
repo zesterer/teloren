@@ -4,20 +4,21 @@ use std::{
 use vek::*;
 use termion::{
     raw::{IntoRawMode, RawTerminal},
+    input::MouseTerminal,
     clear,
     cursor,
 };
 
 pub struct Display {
     size: Vec2<u16>,
-    stdout: RawTerminal<Stdout>,
+    stdout: MouseTerminal<RawTerminal<Stdout>>,
 }
 
 impl Display {
     pub fn new(size: impl Into<Vec2<u16>>, stdout: Stdout) -> Self {
         let mut this = Self {
             size: size.into(),
-            stdout: stdout.into_raw_mode().unwrap(),
+            stdout: MouseTerminal::from(stdout.into_raw_mode().unwrap()),
         };
         this.init();
         this

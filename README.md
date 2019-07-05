@@ -26,7 +26,6 @@ To be implemented
 
 - Chat
 - Build mode
-- More user-friendly controls (perhaps click to move, Diablo style?)
 - Lighting
 - Alias overlays, HUD
 

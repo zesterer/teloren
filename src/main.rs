@@ -11,7 +11,7 @@ use std::{
 use vek::*;
 use termion::{
     input::TermRead,
-    event::Key,
+    event::{Event, Key, MouseEvent},
     color,
 };
 use clap::{App, Arg};
@@ -87,7 +87,7 @@ fn main() {
     let (key_tx, key_rx) = mpsc::channel();
     thread::spawn(move || {
         stdin.lock();
-        for c in stdin.keys() {
+        for c in stdin.events() {
             key_tx.send(c).unwrap();
         }
     });
@@ -95,22 +95,46 @@ fn main() {
     let mut display = Display::new(screen_size, stdout());
     let mut clock = Clock::start();
     let mut do_glide = false;
+    let mut tgt_pos = None;
 
     'running: for _ in 0.. {
+        // Get player pos
+        let player_pos = client
+            .state()
+            .ecs()
+            .read_storage::<comp::Pos>()
+            .get(client.entity())
+            .map(|pos| pos.0.map(|e| e.floor() as i32))
+            .unwrap_or(Vec3::zero());
+
+        let to_screen_pos = |pos: Vec2<f32>|
+            pos.map(|e| e as i32)
+            - Vec2::from(player_pos)
+            + screen_size.map(|e| e as i32) / 2;
+
+        let from_screen_pos = |pos: Vec2<u16>|
+            Vec2::from(player_pos)
+            + pos.map(|e| e as i32)
+            - screen_size.map(|e| e as i32) / 2;
+
         let mut controller = comp::Controller::default();
 
         // Handle inputs
         for c in key_rx.try_iter() {
             match c.unwrap() {
-                Key::Char('w') => controller.move_dir.y -= 1.0,
-                Key::Char('a') => controller.move_dir.x -= 1.0,
-                Key::Char('s') => controller.move_dir.y += 1.0,
-                Key::Char('d') => controller.move_dir.x += 1.0,
-                Key::Char(' ') => controller.jump = true,
-                Key::Char('x') => controller.attack = true,
-                Key::Char('g') => do_glide = !do_glide,
-                Key::Char('r') => controller.respawn = true,
-                Key::Char('q') => break 'running,
+                Event::Key(Key::Char('w')) => controller.move_dir.y -= 1.0,
+                Event::Key(Key::Char('a')) => controller.move_dir.x -= 1.0,
+                Event::Key(Key::Char('s')) => controller.move_dir.y += 1.0,
+                Event::Key(Key::Char('d')) => controller.move_dir.x += 1.0,
+                Event::Mouse(me) => match me {
+                    MouseEvent::Press(_, x, y) => tgt_pos = Some(from_screen_pos(Vec2::new(x, y))),
+                    _ => {},
+                },
+                Event::Key(Key::Char(' ')) => controller.jump = true,
+                Event::Key(Key::Char('x')) => controller.attack = true,
+                Event::Key(Key::Char('g')) => do_glide = !do_glide,
+                Event::Key(Key::Char('r')) => controller.respawn = true,
+                Event::Key(Key::Char('q')) => break 'running,
                 _ => {},
             }
         }
@@ -118,19 +142,19 @@ fn main() {
         if do_glide {
             controller.glide = true;
         }
+        if let Some(tp) = tgt_pos {
+            if tp.distance_squared(player_pos.into()) < 1 {
+                tgt_pos = None;
+            } else {
+                controller.move_dir = (tp - Vec2::from(player_pos)).map(|e: i32| e as f32).normalized();
+            }
+        }
 
         // Tick client
         client.tick(controller, clock.get_last_delta()).unwrap();
         client.cleanup();
 
         let ecs = client.state().ecs();
-
-        // Get player pos
-        let player_pos = ecs
-            .read_storage::<comp::Pos>()
-            .get(client.entity())
-            .map(|pos| pos.0.map(|e| e.floor() as i32))
-            .unwrap_or(Vec3::zero());
 
         // Render block
         for j in 0..screen_size.y {
@@ -169,8 +193,6 @@ fn main() {
             }
         }
 
-        let to_screen_pos = |pos: Vec2<f32>| pos.map(|e| e as i32) - Vec2::from(player_pos) + screen_size.map(|e| e as i32) / 2;
-
         for (
             pos,
         ) in (
@@ -188,16 +210,17 @@ fn main() {
 
         write!(display.at((0, screen_size.y + 0)), "======= Controls =======").unwrap();
         write!(display.at((0, screen_size.y + 1)), "|  wasd - Move         |").unwrap();
-        write!(display.at((0, screen_size.y + 2)), "| space - Jump         |").unwrap();
-        write!(display.at((0, screen_size.y + 3)), "|     x - Attack       |").unwrap();
+        write!(display.at((0, screen_size.y + 2)), "| click - Move         |").unwrap();
+        write!(display.at((0, screen_size.y + 3)), "| space - Jump         |").unwrap();
+        write!(display.at((0, screen_size.y + 4)), "|     x - Attack       |").unwrap();
         if do_glide {
-        write!(display.at((0, screen_size.y + 4)), "|     g - Stop gliding |").unwrap();
+        write!(display.at((0, screen_size.y + 5)), "|     g - Stop gliding |").unwrap();
         } else {
-        write!(display.at((0, screen_size.y + 4)), "|     g - Glide        |").unwrap();
+        write!(display.at((0, screen_size.y + 5)), "|     g - Glide        |").unwrap();
         }
-        write!(display.at((0, screen_size.y + 5)), "|     r - Respawn      |").unwrap();
-        write!(display.at((0, screen_size.y + 6)), "|     q - Quit         |").unwrap();
-        write!(display.at((0, screen_size.y + 7)), "========================").unwrap();
+        write!(display.at((0, screen_size.y + 6)), "|     r - Respawn      |").unwrap();
+        write!(display.at((0, screen_size.y + 7)), "|     q - Quit         |").unwrap();
+        write!(display.at((0, screen_size.y + 8)), "========================").unwrap();
 
         // Finish drawing
         display.flush();
