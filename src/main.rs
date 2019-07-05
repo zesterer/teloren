@@ -94,8 +94,8 @@ fn main() {
     });
 
     let mut display = Display::new(screen_size, stdout());
-
     let mut clock = Clock::start();
+    let mut do_glide = false;
 
     'running: for tick in 0.. {
         let mut controller = comp::Controller::default();
@@ -107,9 +107,17 @@ fn main() {
                 Key::Char('a') => controller.move_dir.x -= 1.0,
                 Key::Char('s') => controller.move_dir.y += 1.0,
                 Key::Char('d') => controller.move_dir.x += 1.0,
+                Key::Char(' ') => controller.jump = true,
+                Key::Char('x') => controller.attack = true,
+                Key::Char('g') => do_glide = !do_glide,
+                Key::Char('r') => controller.respawn = true,
                 Key::Char('q') => break 'running,
                 _ => {},
             }
+        }
+
+        if do_glide {
+            controller.glide = true;
         }
 
         // Tick client
@@ -127,13 +135,15 @@ fn main() {
 
         // Render block
         for j in 0..screen_size.y {
+            let mut display = display.at((0, j));
+
             for i in 0..screen_size.x {
                 let wpos = player_pos + Vec3::new(i, j, 0)
                     .map2(screen_size.into(), |e, sz: u16| e as i32 - sz as i32 / 2);
 
                 let mut block = None;
 
-                for z in -16..16 {
+                for z in -2..16 {
                     if let Some(b) = ecs
                         .read_resource::<TerrainMap>()
                         .get(wpos - Vec3::unit_z() * z)
@@ -148,12 +158,12 @@ fn main() {
                 let (col, c) = match block {
                     Some(block) => match block {
                         block if block.is_empty() => (Rgb::one(), ' '),
-                        _ => (block.get_color().unwrap_or(Rgb::one()), ' '),
+                        _ => (block.get_color().unwrap_or(Rgb::one()), '#'),
                     },
                     None => (Rgb::zero(), '?'),
                 };
 
-                write!(display.at((i, j)), "{}{}", color::Rgb(col.r, col.g, col.b).bg_string(), c).unwrap();
+                write!(display, "{}{}", color::Rgb(col.r, col.g, col.b).fg_string(), c).unwrap();
             }
         }
 
@@ -170,7 +180,7 @@ fn main() {
                 .map2(screen_size, |e, sz| e >= 0 && e < sz as i32)
                 .reduce_and()
             {
-                write!(display.at((scr_pos.x as u16, scr_pos.y as u16)), "{}{}", color::Rgb(0, 0, 0).bg_string(), '@').unwrap();
+                write!(display.at((scr_pos.x as u16, scr_pos.y as u16)), "{}{}", color::White.fg_str(), '@').unwrap();
             }
         }
 
