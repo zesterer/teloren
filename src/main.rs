@@ -45,8 +45,7 @@ fn main() {
             .long("server")
             .value_name("SERVER_ADDR")
             .help("Set the server address")
-            .takes_value(true)
-            .required(true))
+            .takes_value(true))
         .arg(Arg::with_name("port")
             .short("p")
             .long("port")
@@ -56,7 +55,7 @@ fn main() {
         .get_matches();
 
     // Find arguments
-    let server_addr = matches.value_of("server").unwrap_or("127.0.0.1");
+    let server_addr = matches.value_of("server").unwrap_or("server.veloren.net");
     let server_port = matches.value_of("port").unwrap_or("59003");
     let alias = matches.value_of("alias").unwrap_or("teloren_user");
 
