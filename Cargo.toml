@@ -10,10 +10,10 @@ edition = "2018"
 vek = "0.9"
 termion = "1.5"
 clap = "2.33"
-specs = "0.14"
+specs = "0.15.1"
 
 veloren-client = { git = "https://gitlab.com/veloren/veloren.git", branch = "master" }
-veloren-common = { git = "https://gitlab.com/veloren/veloren.git", branch = "master" }
+veloren-common = { git = "https://gitlab.com/veloren/veloren.git", branch = "master", features = ["no-assets"] }
 
 [profile.dev]
 opt-level = 2
