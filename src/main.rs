@@ -33,20 +33,22 @@ fn main() {
         .version("0.1")
         .author("Joshua Barretto <joshua.s.barretto@gmail.com>")
         .about("A terminal Veloren client frontend")
-        .arg(Arg::with_name("alias")
-            .short("a")
-            .long("alias")
-            .value_name("ALIAS")
-            .help("Set the in-game alias")
+        .arg(Arg::with_name("username")
+            .long("username")
+            .value_name("USERNAME")
+            .help("Set the username used to log in")
+            .takes_value(true))
+        .arg(Arg::with_name("password")
+            .long("password")
+            .value_name("PASSWORD")
+            .help("Set the password to log in with")
             .takes_value(true))
         .arg(Arg::with_name("server")
-            .short("s")
             .long("server")
             .value_name("SERVER_ADDR")
             .help("Set the server address")
             .takes_value(true))
         .arg(Arg::with_name("port")
-            .short("p")
             .long("port")
             .value_name("PORT")
             .help("Set the server port")
@@ -56,7 +58,8 @@ fn main() {
     // Find arguments
     let server_addr = matches.value_of("server").unwrap_or("server.veloren.net");
     let server_port = matches.value_of("port").unwrap_or("14004");
-    let alias = matches.value_of("alias").unwrap_or("teloren_user");
+    let username = matches.value_of("username").unwrap_or("teloren_user");
+    let password = matches.value_of("password").unwrap_or("");
     //let password = matches.value_of("password").unwrap_or("");
 
     // Parse server socket
@@ -78,13 +81,14 @@ fn main() {
     println!("Server info: {:?}", client.server_info);
     println!("Players: {:?}", client.get_players());
 
-    client.register(comp::Player::new(alias.to_string(), Some(view_distance)), "".to_string())
+    client.register(username.to_string(), password.to_string(), |provider| provider == "https://auth.veloren.net")
         .unwrap_or_else(|err| {
-            println!("Failed to register player: {:?}", err);
+            println!("Failed to register: {:?}", err);
             process::exit(1);
         });
 
-    client.request_character(alias.to_string(), comp::Body::Humanoid(comp::humanoid::Body::random()), None);
+    client.request_character(username.to_string(), comp::Body::Humanoid(comp::humanoid::Body::random()), None);
+    client.set_view_distance(view_distance);
 
     // Spawn input thread
     let stdin = stdin();
@@ -151,7 +155,7 @@ fn main() {
                 TermEvent::Key(Key::Char(' ')) => inputs.jump.set_state(true),
                 TermEvent::Key(Key::Char('x')) => inputs.primary.set_state(true),
                 TermEvent::Key(Key::Char('g')) => do_glide = !do_glide,
-                TermEvent::Key(Key::Char('r')) => inputs.respawn.set_state(true),
+                TermEvent::Key(Key::Char('r')) => client.respawn(),
                 TermEvent::Key(Key::Char('+')) => zoom_level /= 1.5,
                 TermEvent::Key(Key::Char('-')) => zoom_level *= 1.5,
                 TermEvent::Key(Key::Char('q')) => break 'running,
