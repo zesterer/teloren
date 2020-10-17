@@ -53,6 +53,12 @@ fn main() {
             .value_name("PORT")
             .help("Set the server port")
             .takes_value(true))
+        .arg(Arg::with_name("character")
+            .long("character")
+            .value_name("CHARACTER")
+            .help("Select the character to play")
+            .required(true)
+            .takes_value(true))
         .get_matches();
 
     // Find arguments
@@ -60,6 +66,7 @@ fn main() {
     let server_port = matches.value_of("port").unwrap_or("14004");
     let username = matches.value_of("username").unwrap_or("teloren_user");
     let password = matches.value_of("password").unwrap_or("");
+    let character_name = matches.value_of("character").unwrap_or("");
     //let password = matches.value_of("password").unwrap_or("");
 
     // Parse server socket
@@ -87,7 +94,24 @@ fn main() {
             process::exit(1);
         });
 
-    client.request_character(username.to_string(), comp::Body::Humanoid(comp::humanoid::Body::random()), None);
+    // Request character
+    let clock = Clock::start();
+    client.load_character_list();
+    while client.active_character_id.is_none() {
+        assert!(client.tick(comp::ControllerInputs::default(), clock.get_last_delta(), |_| ()).is_ok());
+        if client.character_list.characters.len() > 0 {
+            let character = client.character_list.characters.iter().find(|x| x.character.alias == character_name);
+            if character.is_some() {
+                let character_id = character.unwrap().character.id.unwrap();
+                client.request_character(character_id);
+                break;
+            } 
+            else {
+                panic!("Character name not found!");
+            }
+        }
+    }
+
     client.set_view_distance(view_distance);
 
     // Spawn input thread
@@ -144,9 +168,9 @@ fn main() {
                     c => chat_input.push(c),
                 },
                 TermEvent::Key(Key::Char('\n')) => chat_input_enabled = true,
-                TermEvent::Key(Key::Char('w')) => inputs.move_dir.y -= 1.0,
+                TermEvent::Key(Key::Char('w')) => inputs.move_dir.y += 1.0,
                 TermEvent::Key(Key::Char('a')) => inputs.move_dir.x -= 1.0,
-                TermEvent::Key(Key::Char('s')) => inputs.move_dir.y += 1.0,
+                TermEvent::Key(Key::Char('s')) => inputs.move_dir.y -= 1.0,
                 TermEvent::Key(Key::Char('d')) => inputs.move_dir.x += 1.0,
                 TermEvent::Mouse(me) => match me {
                     MouseEvent::Press(_, x, y) => tgt_pos = Some(from_screen_pos(Vec2::new(x, y), zoom_level)),
@@ -177,7 +201,7 @@ fn main() {
         // Tick client
         for event in client.tick(inputs, clock.get_last_delta(), |_| ()).unwrap() {
             match event {
-                Event::Chat { message, .. } => chat_log.push(message),
+                Event::Chat(msg) => chat_log.push(msg.message),
                 _ => {},
             }
         }
@@ -210,7 +234,7 @@ fn main() {
                             .terrain()
                             .get(wpos + Vec3::unit_z() * -z)
                             .ok()
-                            .filter(|b| !b.is_empty())
+                            .filter(|b| b.is_filled())
                         {
                             block = Some(*b);
                             block_char = if k < level_chars.len() {
@@ -224,7 +248,7 @@ fn main() {
 
                     let col = match block {
                         Some(block) => match block {
-                            block if block.is_empty() => Rgb::one(),
+                            block if block.is_fluid() => Rgb::one(),
                             _ => block.get_color().unwrap_or(Rgb::one()),
                         },
                         None => Rgb::new(0, 255, 255),
