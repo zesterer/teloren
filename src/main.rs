@@ -21,8 +21,12 @@ use veloren_common::{
     clock::Clock,
     vol::{ReadVol, Vox},
 };
-use specs::Join;
+use specs::{ Join, WorldExt };
 use crate::display::Display;
+
+use crate::{
+    comp::{humanoid, quadruped_low, quadruped_medium, quadruped_small, Body},
+};
 
 fn main() {
     let screen_size = Vec2::new(80, 25);
@@ -258,14 +262,46 @@ fn main() {
                 }
             }
 
-            for pos in state.read_storage::<comp::Pos>().join() {
-                let scr_pos = to_screen_pos(Vec2::from(pos.0), zoom_level);
+            let objs = state.ecs().entities();
+            let positions = state.ecs().read_storage::<comp::Pos>();
+            let bodies = state.ecs().read_storage::<comp::Body>();
 
-                if scr_pos
-                    .map2(screen_size, |e, sz| e >= 0 && e < sz as i32)
-                    .reduce_and()
-                {
-                    write!(display.at((scr_pos.x as u16, scr_pos.y as u16)), "{}{}", color::White.fg_str(), '@').unwrap();
+            for o in objs.join() {
+                let pos = positions.get(o);
+                let body = bodies.get(o);
+                if pos.is_some() && body.is_some() {
+                    let scr_pos = to_screen_pos(Vec2::from(pos.unwrap().0), zoom_level);
+                    let character = 
+                        match body.unwrap() {
+                            Body::Humanoid(humanoid) => match humanoid.species {
+                                humanoid::Species::Danari => 'R',
+                                humanoid::Species::Dwarf => 'D',
+                                humanoid::Species::Elf => 'E',
+                                humanoid::Species::Human => 'H',
+                                humanoid::Species::Orc => 'O',
+                                humanoid::Species::Undead => 'U',
+                            },
+                            Body::QuadrupedLow(_) => '4',
+                            Body::QuadrupedSmall(_) => 'q',
+                            Body::QuadrupedMedium(_) => 'Q',
+                            Body::BirdSmall(_) => 'b',
+                            Body::BirdMedium(_) => 'B',
+                            Body::FishSmall(_) => 'f',
+                            Body::FishMedium(_) => 'F',
+                            Body::BipedLarge(_) => '2',
+                            Body::Object(_) => 'o',
+                            Body::Golem(_) => 'G',
+                            Body::Dragon(_) => 'S',
+                            Body::Theropod(_) => 'T',
+                            _ => '?'
+                    };
+
+                    if scr_pos
+                        .map2(screen_size, |e, sz| e >= 0 && e < sz as i32)
+                        .reduce_and()
+                    {
+                        write!(display.at((scr_pos.x as u16, scr_pos.y as u16)), "{}{}", color::White.fg_str(), character).unwrap();
+                    }
                 }
             }
 
