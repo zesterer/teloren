@@ -19,13 +19,14 @@ use veloren_client::{Client, Event};
 use veloren_common::{
     comp,
     clock::Clock,
-    vol::{ReadVol, Vox},
+    vol::{ReadVol},
+    terrain::{SpriteKind},
 };
 use specs::{ Join, WorldExt };
 use crate::display::Display;
 
 use crate::{
-    comp::{humanoid, quadruped_low, quadruped_medium, quadruped_small, Body},
+    comp::{humanoid, Body},
 };
 
 fn main() {
@@ -229,7 +230,7 @@ fn main() {
 
                     let mut block_z = 0;
                     let mut block = None;
-                    let mut block_char = '?';
+                    let mut block_char = None;
 
                     for (k, z) in (-2..16).enumerate() {
                         block_z = wpos.z - z;
@@ -238,15 +239,43 @@ fn main() {
                             .terrain()
                             .get(wpos + Vec3::unit_z() * -z)
                             .ok()
-                            .filter(|b| b.is_filled())
                         {
-                            block = Some(*b);
-                            block_char = if k < level_chars.len() {
-                                level_chars[k as usize]
-                            } else {
-                                if block_z % 2 == 0 { 'O' } else { '0' }
-                            };
-                            break;
+                            let sprite = b.get_sprite();
+                            if sprite.is_some() && sprite.unwrap()!=SpriteKind::Empty {
+                                let sprite2 = sprite.unwrap();
+                                let flower1 = SpriteKind::BarrelCactus as u8 ..= SpriteKind::Turnip as u8;
+                                let flower2 = SpriteKind::LargeGrass as u8 ..= SpriteKind::LargeCactus as u8;
+                                let furniture = SpriteKind::Window1 as u8 ..= SpriteKind::WardrobeDouble as u8;
+                                block_char = match sprite2 {
+                                    SpriteKind::Apple => Some('a'),
+                                    SpriteKind::Sunflower => Some('u'),
+                                    SpriteKind::Mushroom => Some('m'),
+                                    SpriteKind::Velorite|SpriteKind::VeloriteFrag => Some('v'),
+                                    SpriteKind::Chest|SpriteKind::Crate => Some('c'),
+                                    SpriteKind::Stones => Some('s'),
+                                    SpriteKind::Twigs => Some('t'),
+                                    SpriteKind::ShinyGem => Some('g'),
+                                    SpriteKind::Beehive => Some('b'),
+                                    _ => {
+                                        let sprite3 = sprite2 as u8;
+                                        if flower1.contains(&sprite3) || flower2.contains(&sprite3)
+                                        { Some('%') }
+                                        else if furniture.contains(&sprite3) { Some('&') }
+                                        else { None }
+                                    }
+                                };
+                            }
+                            else if b.is_filled() {
+                                block = Some(*b);
+                                if block_char.is_none() {
+                                    block_char = Some(if k < level_chars.len() {
+                                        level_chars[k as usize]
+                                    } else {
+                                        if block_z % 2 == 0 { 'O' } else { '0' }
+                                    });
+                                }
+                                break;
+                            }
                         }
                     }
 
@@ -258,7 +287,9 @@ fn main() {
                         None => Rgb::new(0, 255, 255),
                     };
 
-                    write!(display, "{}{}", color::Rgb(col.r, col.g, col.b).fg_string(), block_char).unwrap();
+                    if block_char.is_none() { block_char= Some('?'); }
+
+                    write!(display, "{}{}", color::Rgb(col.r, col.g, col.b).fg_string(), block_char.unwrap()).unwrap();
                 }
             }
 
