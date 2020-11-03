@@ -10,7 +10,7 @@ Teloren is currently still very much a work in progress and I strongly recommend
 Start Teloren using the following arguments:
 
 ```
-teloren --alias YOUR_ALIAS
+teloren --username YOUR_LOGIN --password YOUR_PASSWORD --character YOUR_CHARACTER
 ```
 
 Optionally, you may also specify `--server` and `--port` arguments to play on something other than the main public server.
@@ -20,14 +20,17 @@ Optionally, you may also specify `--server` and `--port` arguments to play on so
 Currently implemented
 
 - World rendering
+- Object rendering
 - Basic movement
+- Chat
 
 To be implemented
 
-- Chat
 - Build mode
 - Lighting
 - Alias overlays, HUD
+- Picking up objects
+- Accepting a group invite
 
 ## Why?
 
