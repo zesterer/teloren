@@ -100,10 +100,10 @@ fn main() {
         });
 
     // Request character
-    let clock = Clock::start();
+    let mut clock = Clock::new(Duration::from_secs_f64(1.0 / tps as f64));
     client.load_character_list();
-    while client.active_character_id.is_none() {
-        assert!(client.tick(comp::ControllerInputs::default(), clock.get_last_delta(), |_| ()).is_ok());
+    while client.presence().is_none() {
+        assert!(client.tick(comp::ControllerInputs::default(), clock.dt(), |_| ()).is_ok());
         if client.character_list.characters.len() > 0 {
             let character = client.character_list.characters.iter().find(|x| x.character.alias == character_name);
             if character.is_some() {
@@ -130,7 +130,7 @@ fn main() {
     });
 
     let mut display = Display::new(screen_size, stdout());
-    let mut clock = Clock::start();
+//    let mut clock = Clock::start();
     let mut do_glide = false;
     let mut zoom_level = 1.0;
     let mut tgt_pos = None;
@@ -204,7 +204,7 @@ fn main() {
         }
 
         // Tick client
-        for event in client.tick(inputs, clock.get_last_delta(), |_| ()).unwrap() {
+        for event in client.tick(inputs, clock.dt(), |_| ()).unwrap() {
             match event {
                 Event::Chat(msg) => chat_log.push(msg.message),
                 _ => {},
@@ -366,6 +366,6 @@ fn main() {
         display.flush();
 
         // Wait for next tick
-        clock.tick(Duration::from_millis(1000 / tps));
+        clock.tick();
     }
 }
