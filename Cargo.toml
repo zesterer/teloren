@@ -10,7 +10,7 @@ edition = "2018"
 vek = { version = "0.12.0", features = ["platform_intrinsics", "serde"] }
 termion = "1.5"
 clap = "2.33"
-specs = { git = "https://github.com/amethyst/specs.git", rev = "7a2e348ab2223818bad487695c66c43db88050a5" }
+specs = { git = "https://github.com/amethyst/specs.git", rev = "d4435bdf496cf322c74886ca09dd8795984919b4" }
 
 veloren-client = { git = "https://gitlab.com/veloren/veloren.git", branch = "master" }
 veloren-common = { git = "https://gitlab.com/veloren/veloren.git", branch = "master", features = ["no-assets"] }
