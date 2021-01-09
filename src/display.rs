@@ -1,13 +1,10 @@
-use std::{
-    io::{self, Write, Stdout},
+use std::io::{self, Stdout, Write};
+use termion::{
+    clear, cursor,
+    input::MouseTerminal,
+    raw::{IntoRawMode, RawTerminal},
 };
 use vek::*;
-use termion::{
-    raw::{IntoRawMode, RawTerminal},
-    input::MouseTerminal,
-    clear,
-    cursor,
-};
 
 pub struct Display {
     size: Vec2<u16>,
