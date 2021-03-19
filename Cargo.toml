@@ -7,10 +7,11 @@ edition = "2018"
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
-vek = { version = "0.12.0", features = ["platform_intrinsics", "serde"] }
+vek = { version = "=0.14.1", features = ["serde"] }
 termion = "1.5"
 clap = "2.33"
 specs = { git = "https://github.com/amethyst/specs.git", rev = "d4435bdf496cf322c74886ca09dd8795984919b4" }
+tokio = "1"
 
 veloren-client = { git = "https://gitlab.com/veloren/veloren.git", branch = "master" }
 veloren-common = { git = "https://gitlab.com/veloren/veloren.git", branch = "master", features = ["no-assets"] }

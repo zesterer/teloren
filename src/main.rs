@@ -2,12 +2,10 @@ mod display;
 
 use crate::display::Display;
 use clap::{App, Arg};
-use specs::{Join, WorldExt};
 use std::{
     io::{stdin, stdout, Write},
-    net::ToSocketAddrs,
     process,
-    sync::mpsc,
+    sync::{mpsc, Arc},
     thread,
     time::Duration,
 };
@@ -16,9 +14,10 @@ use termion::{
     event::{Event as TermEvent, Key, MouseEvent},
     input::TermRead,
 };
+use tokio::runtime::Runtime;
 use vek::*;
-use veloren_client::{Client, Event};
-use veloren_common::{clock::Clock, comp, terrain::SpriteKind, vol::ReadVol};
+use veloren_client::{addr::ConnectionArgs, Client, Event, Join, WorldExt};
+use veloren_common::{clock::Clock, comp, comp::InputKind, terrain::SpriteKind, vol::ReadVol};
 
 use crate::comp::{humanoid, Body};
 
@@ -75,30 +74,31 @@ fn main() {
     let username = matches.value_of("username").unwrap_or("teloren_user");
     let password = matches.value_of("password").unwrap_or("");
     let character_name = matches.value_of("character").unwrap_or("");
-    //let password = matches.value_of("password").unwrap_or("");
 
     // Parse server socket
-    let server_sock = format!("{}:{}", server_addr, server_port)
-        .to_socket_addrs()
-        .unwrap_or_else(|_| {
-            println!("Invalid server address");
-            process::exit(1);
-        })
-        .next()
-        .unwrap();
+    let server_spec = format!("{}:{}", server_addr, server_port);
 
-    let mut client = Client::new(server_sock, Some(view_distance)).unwrap_or_else(|err| {
-        println!("Failed to connect to server: {:?}", err);
-        process::exit(1);
-    });
+    let runtime = Arc::new(Runtime::new().unwrap());
+    let runtime2 = Arc::clone(&runtime);
+
+    let mut client = runtime
+        .block_on(async {
+            let addr = ConnectionArgs::resolve(&server_spec, false)
+                .await
+                .expect("dns resolve failed");
+            Client::new(addr, Some(view_distance), runtime2).await
+        })
+        .expect("Failed to create client instance");
 
     println!("Server info: {:?}", client.server_info());
     println!("Players: {:?}", client.get_players());
 
-    client
-        .register(username.to_string(), password.to_string(), |provider| {
-            provider == "https://auth.veloren.net"
-        })
+    runtime
+        .block_on(
+            client.register(username.to_string(), password.to_string(), |provider| {
+                provider == "https://auth.veloren.net"
+            }),
+        )
         .unwrap_or_else(|err| {
             println!("Failed to register: {:?}", err);
             process::exit(1);
@@ -140,8 +140,6 @@ fn main() {
     });
 
     let mut display = Display::new(screen_size, stdout());
-    //    let mut clock = Clock::start();
-    let mut do_glide = false;
     let mut zoom_level = 1.0;
     let mut tgt_pos = None;
     let mut chat_log = Vec::new();
@@ -197,9 +195,13 @@ fn main() {
                     }
                     _ => {}
                 },
-                TermEvent::Key(Key::Char(' ')) => inputs.jump.set_state(true),
-                TermEvent::Key(Key::Char('x')) => inputs.primary.set_state(true),
-                TermEvent::Key(Key::Char('g')) => do_glide = !do_glide,
+                TermEvent::Key(Key::Char(' ')) => {
+                    client.handle_input(InputKind::Jump, true);
+                }
+                TermEvent::Key(Key::Char('x')) => {
+                    client.handle_input(InputKind::Primary, true);
+                }
+                TermEvent::Key(Key::Char('g')) => client.toggle_glide(), //do_glide = !do_glide,
                 TermEvent::Key(Key::Char('r')) => client.respawn(),
                 TermEvent::Key(Key::Char('+')) => zoom_level /= 1.5,
                 TermEvent::Key(Key::Char('-')) => zoom_level *= 1.5,
@@ -208,9 +210,6 @@ fn main() {
             }
         }
 
-        if do_glide {
-            inputs.glide.set_state(true);
-        }
         if let Some(tp) = tgt_pos {
             if tp.distance_squared(player_pos.into()) < 1.0 {
                 tgt_pos = None;
@@ -273,7 +272,7 @@ fn main() {
                                     SpriteKind::Chest | SpriteKind::Crate => Some('c'),
                                     SpriteKind::Stones => Some('s'),
                                     SpriteKind::Twigs => Some('t'),
-                                    SpriteKind::ShinyGem => Some('g'),
+                                    SpriteKind::Amethyst | SpriteKind::Ruby => Some('g'), // TODO: add more
                                     SpriteKind::Beehive => Some('b'),
                                     _ => {
                                         let sprite3 = sprite2 as u8;
@@ -353,10 +352,12 @@ fn main() {
                         Body::FishSmall(_) => 'f',
                         Body::FishMedium(_) => 'F',
                         Body::BipedLarge(_) => '2',
+                        Body::BipedSmall(_) => '2',
                         Body::Object(_) => 'o',
                         Body::Golem(_) => 'G',
                         Body::Dragon(_) => 'S',
                         Body::Theropod(_) => 'T',
+                        Body::Ship(_) => '_',
                         //_ => '?'
                     };
 
@@ -400,19 +401,11 @@ fn main() {
                 "|      x - Attack       |"
             )
             .unwrap();
-            if do_glide {
-                write!(
-                    display.at((0, screen_size.y + 5)),
-                    "|      g - Stop gliding |"
-                )
-                .unwrap();
-            } else {
-                write!(
-                    display.at((0, screen_size.y + 5)),
-                    "|      g - Glide        |"
-                )
-                .unwrap();
-            }
+            write!(
+                display.at((0, screen_size.y + 5)),
+                "|      g - toggle glide |"
+            )
+            .unwrap();
             write!(
                 display.at((0, screen_size.y + 6)),
                 "|      r - Respawn      |"
