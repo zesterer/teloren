@@ -22,6 +22,9 @@ Currently implemented
 - World rendering
 - Object rendering
 - Basic movement
+- Accepting a group invite
+- Health & Energy
+- Basic combat 
 - Chat
 
 To be implemented
@@ -30,7 +33,6 @@ To be implemented
 - Lighting
 - Alias overlays, HUD
 - Picking up objects
-- Accepting a group invite
 
 ## Why?
 
