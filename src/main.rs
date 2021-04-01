@@ -1,5 +1,6 @@
 mod display;
 
+use crate::comp::{humanoid, Body};
 use crate::display::Display;
 use clap::{App, Arg};
 use std::{
@@ -16,10 +17,17 @@ use termion::{
 };
 use tokio::runtime::Runtime;
 use vek::*;
-use veloren_client::{addr::ConnectionArgs, Client, Event, Join, WorldExt, Marker, MarkerAllocator};
-use veloren_common::{clock::Clock, comp, comp::{Health, Energy, InputKind}, uid::UidAllocator, terrain::SpriteKind, vol::ReadVol};
-use crate::comp::{humanoid, Body};
-
+use veloren_client::{
+    addr::ConnectionArgs, Client, Event, Join, Marker, MarkerAllocator, WorldExt,
+};
+use veloren_common::{
+    clock::Clock,
+    comp,
+    comp::{Energy, Health, InputKind},
+    terrain::SpriteKind,
+    uid::UidAllocator,
+    vol::ReadVol,
+};
 
 fn main() {
     let screen_size = Vec2::new(80, 25);
@@ -103,11 +111,11 @@ fn main() {
             println!("Failed to register: {:?}", err);
             process::exit(1);
         });
-	    
+
     // Request character
     let mut clock = Clock::new(Duration::from_secs_f64(1.0 / tps as f64));
     client.load_character_list();
-        
+
     while client.presence().is_none() {
         assert!(client
             .tick(comp::ControllerInputs::default(), clock.dt(), |_| ())
@@ -149,24 +157,35 @@ fn main() {
 
     'running: for tick in 0.. {
         // Get Health and Energy
-        let (current_health, max_health) = client.current::<comp::Health>().map_or((0, 0), |health| (health.current(), health.maximum()));
-        let (current_energy, max_energy) = client.current::<comp::Energy>().map_or((0, 0), |energy| (energy.current(), energy.maximum()));
+        let (current_health, max_health) = client
+            .current::<comp::Health>()
+            .map_or((0, 0), |health| (health.current(), health.maximum()));
+        let (current_energy, max_energy) = client
+            .current::<comp::Energy>()
+            .map_or((0, 0), |energy| (energy.current(), energy.maximum()));
 
         // Invite Logic
-		let (inviter_uid, invite_kind) = if let Some((inviter_uid, _, _, invite_kind)) = client.invite() {
-    		(Some(inviter_uid), Some(invite_kind))
-		} else {
-    		(None, None)
-		};
-		
-		//Get entity username from UID
-		let invite_username = inviter_uid
-			.and_then(|uid| client.state().ecs().read_resource::<UidAllocator>().retrieve_entity_internal(uid.id())) 
-			.and_then(|entity| client.state().read_storage::<comp::Player>().get(entity))
-			.map(|player| player.alias.clone())
-			.unwrap_or_default();
-		
-		//Get player pos
+        let (inviter_uid, invite_kind) =
+            if let Some((inviter_uid, _, _, invite_kind)) = client.invite() {
+                (Some(inviter_uid), Some(invite_kind))
+            } else {
+                (None, None)
+            };
+
+        //Get entity username from UID
+        let invite_username = inviter_uid
+            .and_then(|uid| {
+                client
+                    .state()
+                    .ecs()
+                    .read_resource::<UidAllocator>()
+                    .retrieve_entity_internal(uid.id())
+            })
+            .and_then(|entity| client.state().read_storage::<comp::Player>().get(entity))
+            .map(|player| player.alias.clone())
+            .unwrap_or_default();
+
+        //Get player pos
         let player_pos = client
             .state()
             .read_storage::<comp::Pos>()
@@ -207,8 +226,8 @@ fn main() {
                 TermEvent::Key(Key::Char('a')) => inputs.move_dir.x -= 1.0,
                 TermEvent::Key(Key::Char('s')) => inputs.move_dir.y -= 1.0,
                 TermEvent::Key(Key::Char('d')) => inputs.move_dir.x += 1.0,
-				TermEvent::Key(Key::Char('u')) => client.accept_invite(),
-				TermEvent::Key(Key::Char('i')) => client.decline_invite(),
+                TermEvent::Key(Key::Char('u')) => client.accept_invite(),
+                TermEvent::Key(Key::Char('i')) => client.decline_invite(),
                 TermEvent::Mouse(me) => match me {
                     MouseEvent::Press(_, x, y) => {
                         tgt_pos = Some(from_screen_pos(Vec2::new(x, y), zoom_level))
@@ -222,16 +241,14 @@ fn main() {
                     client.handle_input(InputKind::Primary, true, None, None);
                 }
                 TermEvent::Key(Key::Char('z')) => {
- 			if is_secondary_active {
-				client.handle_input(InputKind::Secondary, false, None, None;
-				is_secondary_active = false;
-            		}
-			else {
-			client.handle_input(InputKind::Secondary, true, None, None);
-			is_secondary_active = true;
-			}
-						
-  		},
+                    if is_secondary_active {
+                        client.handle_input(InputKind::Secondary, false, None, None);
+                        is_secondary_active = false;
+                    } else {
+                        client.handle_input(InputKind::Secondary, true, None, None);
+                        is_secondary_active = true;
+                    }
+                }
                 TermEvent::Key(Key::Char('g')) => client.toggle_glide(), //do_glide = !do_glide,
                 TermEvent::Key(Key::Char('r')) => client.respawn(),
                 TermEvent::Key(Key::Char('+')) => zoom_level /= 1.5,
@@ -251,17 +268,19 @@ fn main() {
         }
 
         // Tick client
-		for event in client.tick(inputs, clock.dt(), |_| ()).unwrap() {
-    		match event {
-        		Event::Chat(msg) => match msg.chat_type {
-            		comp::ChatType::World(_) => chat_log.push(msg.message),
-            		comp::ChatType::Group(_, _)=> chat_log.push(format!("[Group] {}", msg.message)),
+        for event in client.tick(inputs, clock.dt(), |_| ()).unwrap() {
+            match event {
+                Event::Chat(msg) => match msg.chat_type {
+                    comp::ChatType::World(_) => chat_log.push(msg.message),
+                    comp::ChatType::Group(_, _) => {
+                        chat_log.push(format!("[Group] {}", msg.message))
+                    }
 
-            		_ => {},
-        		},
-        		_ => {}
-    		}
-		}
+                    _ => {}
+                },
+                _ => {}
+            }
+        }
         client.cleanup();
 
         // Drawing
@@ -436,19 +455,17 @@ fn main() {
                 "|      x - Attack1      |"
             )
             .unwrap();
-          if is_secondary_active {
-            write!(
-                display.at((0, screen_size.y + 5)),
-                "|  z - Attack2 ACTIVE   |"
-            )
-            }
-            
-          else {
-          		write!(
-                display.at((0, screen_size.y + 5)),
-                "|  z - Attack2 INACTIVE |"
+            if is_secondary_active {
+                write!(
+                    display.at((0, screen_size.y + 5)),
+                    "|  z - Attack2 ACTIVE   |"
                 )
-          }
+            } else {
+                write!(
+                    display.at((0, screen_size.y + 5)),
+                    "|  z - Attack2 INACTIVE |"
+                )
+            }
             .unwrap();
             write!(
                 display.at((0, screen_size.y + 6)),
@@ -481,12 +498,14 @@ fn main() {
             )
             .unwrap();
             write!(
-                display.at((0, screen_size.y + 12)), "{}",
+                display.at((0, screen_size.y + 12)),
+                "{}",
                 &format!("Current Health - {}/{}", current_health, max_health)
             )
             .unwrap();
             write!(
-                display.at((0, screen_size.y + 13)), "{}",
+                display.at((0, screen_size.y + 13)),
+                "{}",
                 &format!("Current Energy - {}/{}", current_energy, max_energy)
             )
             .unwrap();
@@ -495,21 +514,20 @@ fn main() {
                 "\\------------------------/"
             )
             .unwrap();
-          	if inviter_uid.is_some() {
-          			write!(
-                	display.at((0, screen_size.y + 15)), "{:?}",
-                	&format!("You've been invited to {:?} by {:?}. Accept [U] or Decline [I]?", invite_kind, inviter_username)
-                	)
-            	}
-            	
-          	else {
-          			write!(
-                	display.at((0, screen_size.y + 15)),
-                	" "
-                	)
-          	}
-          	.unwrap();
-	
+            if inviter_uid.is_some() {
+                write!(
+                    display.at((0, screen_size.y + 15)),
+                    "{:?}",
+                    &format!(
+                        "You've been invited to {:?} by {:?}. Accept [U] or Decline [I]?",
+                        invite_kind, inviter_username
+                    )
+                )
+            } else {
+                write!(display.at((0, screen_size.y + 15)), " ")
+            }
+            .unwrap();
+
             let clear = "                                                                ";
             for (i, msg) in chat_log.iter().rev().take(10).enumerate() {
                 write!(display.at((24, screen_size.y + 10 - i as u16)), "{}", clear).unwrap();
@@ -530,6 +548,4 @@ fn main() {
         // Wait for next tick
         clock.tick();
     }
-
-
 }
