@@ -17,15 +17,15 @@ use termion::{
 use tokio::runtime::Runtime;
 use vek::*;
 use veloren_client::{addr::ConnectionArgs, Client, Event, Join, WorldExt};
-use veloren_common::{clock::Clock, comp, comp::InputKind, terrain::SpriteKind, vol::ReadVol};
-
+use veloren_common::{clock::Clock, comp, comp::{Health, Energy, InputKind}, terrain::SpriteKind, vol::ReadVol};
 use crate::comp::{humanoid, Body};
+
 
 fn main() {
     let screen_size = Vec2::new(80, 25);
     let view_distance = 12;
     let tps = 60;
-
+    let mut is_secondary_active: bool = false;
     let matches = App::new("Teloren")
         .version("0.1")
         .author("Joshua Barretto <joshua.s.barretto@gmail.com>")
@@ -103,10 +103,11 @@ fn main() {
             println!("Failed to register: {:?}", err);
             process::exit(1);
         });
-
+	    
     // Request character
     let mut clock = Clock::new(Duration::from_secs_f64(1.0 / tps as f64));
     client.load_character_list();
+        
     while client.presence().is_none() {
         assert!(client
             .tick(comp::ControllerInputs::default(), clock.dt(), |_| ())
@@ -148,13 +149,14 @@ fn main() {
 
     'running: for tick in 0.. {
         // Get player pos
+        let (current_health, max_health) = client.current::<comp::Health>().map_or((0, 0), |health| (health.current(), health.maximum()));
+        let (current_energy, max_energy) = client.current::<comp::Energy>().map_or((0, 0), |energy| (energy.current(), energy.maximum()));
         let player_pos = client
             .state()
             .read_storage::<comp::Pos>()
             .get(client.entity())
             .map(|pos| pos.0)
             .unwrap_or(Vec3::zero());
-
         let to_screen_pos = |pos: Vec2<f32>, zoom_level: f32| {
             ((pos - Vec2::from(player_pos)) * Vec2::new(1.0, -1.0) / zoom_level
                 + screen_size.map(|e| e as f32) / 2.0)
@@ -196,11 +198,17 @@ fn main() {
                     _ => {}
                 },
                 TermEvent::Key(Key::Char(' ')) => {
-                    client.handle_input(InputKind::Jump, true);
+                    client.handle_input(InputKind::Jump, true, None, None);
                 }
                 TermEvent::Key(Key::Char('x')) => {
-                    client.handle_input(InputKind::Primary, true);
+                    client.handle_input(InputKind::Primary, true, None, None);
                 }
+                TermEvent::Key(Key::Char('z')) => {
+ 					match is_secondary_active {
+						false => {client.handle_input(InputKind::Secondary, true, None, None); is_secondary_active = true;},
+						true => {client.handle_input(InputKind::Secondary, false, None, None); is_secondary_active = false;},
+            		};
+  		},
                 TermEvent::Key(Key::Char('g')) => client.toggle_glide(), //do_glide = !do_glide,
                 TermEvent::Key(Key::Char('r')) => client.respawn(),
                 TermEvent::Key(Key::Char('+')) => zoom_level /= 1.5,
@@ -209,7 +217,6 @@ fn main() {
                 _ => {}
             }
         }
-
         if let Some(tp) = tgt_pos {
             if tp.distance_squared(player_pos.into()) < 1.0 {
                 tgt_pos = None;
@@ -221,12 +228,15 @@ fn main() {
         }
 
         // Tick client
-        for event in client.tick(inputs, clock.dt(), |_| ()).unwrap() {
-            match event {
-                Event::Chat(msg) => chat_log.push(msg.message),
-                _ => {}
-            }
-        }
+		for event in client.tick(inputs, clock.dt(), |_| ()).unwrap() {
+    		match event {
+        		Event::Chat(msg) => match msg.chat_type {
+            		comp::ChatType::World(_) => chat_log.push(msg.message),
+            		_ => {},
+        		},
+        		_ => {}
+    		}
+		}
         client.cleanup();
 
         // Drawing
@@ -398,42 +408,66 @@ fn main() {
             .unwrap();
             write!(
                 display.at((0, screen_size.y + 4)),
-                "|      x - Attack       |"
+                "|      x - Attack1      |"
             )
             .unwrap();
+          if (is_secondary_active) {
             write!(
                 display.at((0, screen_size.y + 5)),
+                "|  z - Attack2 ACTIVE   |"
+            )
+            }
+            
+          else {
+          		write!(
+                display.at((0, screen_size.y + 5)),
+                "|  z - Attack2 INACTIVE |"
+                )
+          }
+            .unwrap();
+            write!(
+                display.at((0, screen_size.y + 6)),
                 "|      g - toggle glide |"
             )
             .unwrap();
             write!(
-                display.at((0, screen_size.y + 6)),
+                display.at((0, screen_size.y + 7)),
                 "|      r - Respawn      |"
             )
             .unwrap();
             write!(
-                display.at((0, screen_size.y + 7)),
+                display.at((0, screen_size.y + 8)),
                 "|      q - Quit         |"
             )
             .unwrap();
             write!(
-                display.at((0, screen_size.y + 8)),
+                display.at((0, screen_size.y + 9)),
                 "|      + - Zoom in      |"
             )
             .unwrap();
             write!(
-                display.at((0, screen_size.y + 9)),
+                display.at((0, screen_size.y + 10)),
                 "|      - - Zoom out     |"
             )
             .unwrap();
             write!(
-                display.at((0, screen_size.y + 10)),
+                display.at((0, screen_size.y + 11)),
                 "| return - Chat         |"
             )
             .unwrap();
             write!(
-                display.at((0, screen_size.y + 11)),
-                "\\-----------------------/"
+                display.at((0, screen_size.y + 12)), "{}",
+                &format!("Current Health - {}/{}", current_health, max_health)
+            )
+            .unwrap();
+            write!(
+                display.at((0, screen_size.y + 13)), "{}",
+                &format!("Current Energy - {}/{}", current_energy, max_energy)
+            )
+            .unwrap();
+            write!(
+                display.at((0, screen_size.y + 14)),
+                "\\------------------------/"
             )
             .unwrap();
 
@@ -447,8 +481,8 @@ fn main() {
                 )
                 .unwrap();
             }
-            write!(display.at((24, screen_size.y + 11)), "{}", clear).unwrap();
-            write!(display.at((24, screen_size.y + 11)), "> {}", chat_input).unwrap();
+            write!(display.at((24, screen_size.y + 12)), "{}", clear).unwrap();
+            write!(display.at((24, screen_size.y + 12)), "> {}", chat_input).unwrap();
         }
 
         // Finish drawing
@@ -457,4 +491,7 @@ fn main() {
         // Wait for next tick
         clock.tick();
     }
+
+
 }
+
