@@ -160,20 +160,13 @@ fn main() {
 		};
 		
 		//Get entity username from UID
-        let inviter_username = if let Some(uid) = inviter_uid {
-            if let Some(entity) = client.state().ecs().read_resource::<UidAllocator>().retrieve_entity_internal(uid.id()) {
-                if let Some(player) = client.state().read_storage::<comp::Player>().get(entity) {
-                    player.alias.clone()
-                } else {
-                    "".to_string()
-                }
-            } else {
-                "".to_string()
-            }
-        } else {
-            "".to_string()
-        };
-        //Get player pos
+		let invite_username = inviter_uid
+			.and_then(|uid| client.state().ecs().read_resource::<UidAllocator>().retrieve_entity_internal(uid.id())) 
+			.and_then(|entity| client.state().read_storage::<comp::Player>().get(entity))
+			.map(|player| player.alias.clone())
+			.unwrap_or_default();
+		
+		//Get player pos
         let player_pos = client
             .state()
             .read_storage::<comp::Pos>()
@@ -229,10 +222,15 @@ fn main() {
                     client.handle_input(InputKind::Primary, true, None, None);
                 }
                 TermEvent::Key(Key::Char('z')) => {
- 					match is_secondary_active {
-						false => {client.handle_input(InputKind::Secondary, true, None, None); is_secondary_active = true;},
-						true => {client.handle_input(InputKind::Secondary, false, None, None); is_secondary_active = false;},
-            		};
+ 			if is_secondary_active {
+				client.handle_input(InputKind::Secondary, false, None, None;
+				is_secondary_active = false;
+            		}
+			else {
+			client.handle_input(InputKind::Secondary, true, None, None);
+			is_secondary_active = true;
+			}
+						
   		},
                 TermEvent::Key(Key::Char('g')) => client.toggle_glide(), //do_glide = !do_glide,
                 TermEvent::Key(Key::Char('r')) => client.respawn(),
