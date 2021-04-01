@@ -16,8 +16,8 @@ use termion::{
 };
 use tokio::runtime::Runtime;
 use vek::*;
-use veloren_client::{addr::ConnectionArgs, Client, Event, Join, WorldExt};
-use veloren_common::{clock::Clock, comp, comp::{Health, Energy, InputKind}, terrain::SpriteKind, vol::ReadVol};
+use veloren_client::{addr::ConnectionArgs, Client, Event, Join, WorldExt, Marker, MarkerAllocator};
+use veloren_common::{clock::Clock, comp, comp::{Health, Energy, InputKind}, uid::UidAllocator, terrain::SpriteKind, vol::ReadVol};
 use crate::comp::{humanoid, Body};
 
 
@@ -148,9 +148,32 @@ fn main() {
     let mut chat_input_enabled = false;
 
     'running: for tick in 0.. {
-        // Get player pos
+        // Get Health and Energy
         let (current_health, max_health) = client.current::<comp::Health>().map_or((0, 0), |health| (health.current(), health.maximum()));
         let (current_energy, max_energy) = client.current::<comp::Energy>().map_or((0, 0), |energy| (energy.current(), energy.maximum()));
+
+        // Invite Logic
+		let (inviter_uid, invite_kind) = if let Some((inviter_uid, _, _, invite_kind)) = client.invite() {
+    		(Some(inviter_uid), Some(invite_kind))
+		} else {
+    		(None, None)
+		};
+		
+		//Get entity username from UID
+        let inviter_username = if let Some(uid) = inviter_uid {
+            if let Some(entity) = client.state().ecs().read_resource::<UidAllocator>().retrieve_entity_internal(uid.id()) {
+                if let Some(player) = client.state().read_storage::<comp::Player>().get(entity) {
+                    player.alias.clone()
+                } else {
+                    "".to_string()
+                }
+            } else {
+                "".to_string()
+            }
+        } else {
+            "".to_string()
+        };
+        //Get player pos
         let player_pos = client
             .state()
             .read_storage::<comp::Pos>()
@@ -191,6 +214,8 @@ fn main() {
                 TermEvent::Key(Key::Char('a')) => inputs.move_dir.x -= 1.0,
                 TermEvent::Key(Key::Char('s')) => inputs.move_dir.y -= 1.0,
                 TermEvent::Key(Key::Char('d')) => inputs.move_dir.x += 1.0,
+				TermEvent::Key(Key::Char('u')) => client.accept_invite(),
+				TermEvent::Key(Key::Char('i')) => client.decline_invite(),
                 TermEvent::Mouse(me) => match me {
                     MouseEvent::Press(_, x, y) => {
                         tgt_pos = Some(from_screen_pos(Vec2::new(x, y), zoom_level))
@@ -232,6 +257,8 @@ fn main() {
     		match event {
         		Event::Chat(msg) => match msg.chat_type {
             		comp::ChatType::World(_) => chat_log.push(msg.message),
+            		comp::ChatType::Group(_, _)=> chat_log.push(format!("[Group] {}", msg.message)),
+
             		_ => {},
         		},
         		_ => {}
@@ -411,7 +438,7 @@ fn main() {
                 "|      x - Attack1      |"
             )
             .unwrap();
-          if (is_secondary_active) {
+          if is_secondary_active {
             write!(
                 display.at((0, screen_size.y + 5)),
                 "|  z - Attack2 ACTIVE   |"
@@ -470,7 +497,21 @@ fn main() {
                 "\\------------------------/"
             )
             .unwrap();
-
+          	if inviter_uid.is_some() {
+          			write!(
+                	display.at((0, screen_size.y + 15)), "{:?}",
+                	&format!("You've been invited to {:?} by {:?}. Accept [U] or Decline [I]?", invite_kind, inviter_username)
+                	)
+            	}
+            	
+          	else {
+          			write!(
+                	display.at((0, screen_size.y + 15)),
+                	" "
+                	)
+          	}
+          	.unwrap();
+	
             let clear = "                                                                ";
             for (i, msg) in chat_log.iter().rev().take(10).enumerate() {
                 write!(display.at((24, screen_size.y + 10 - i as u16)), "{}", clear).unwrap();
@@ -494,4 +535,3 @@ fn main() {
 
 
 }
-
