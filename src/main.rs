@@ -173,18 +173,24 @@ fn main() {
             };
 
         //Get entity username from UID
-        let invite_username = inviter_uid
-            .and_then(|uid| {
-                client
-                    .state()
-                    .ecs()
-                    .read_resource::<UidAllocator>()
-                    .retrieve_entity_internal(uid.id())
-            })
-            .and_then(|entity| client.state().read_storage::<comp::Player>().get(entity))
-            .map(|player| player.alias.clone())
-            .unwrap_or_default();
-
+        let inviter_username = if let Some(uid) = inviter_uid {
+            if let Some(entity) = client
+                .state()
+                .ecs()
+                .read_resource::<UidAllocator>()
+                .retrieve_entity_internal(uid.id())
+            {
+                if let Some(player) = client.state().read_storage::<comp::Player>().get(entity) {
+                    player.alias.clone()
+                } else {
+                    "".to_string()
+                }
+            } else {
+                "".to_string()
+            }
+        } else {
+            "".to_string()
+        };
         //Get player pos
         let player_pos = client
             .state()
