@@ -1,5 +1,4 @@
 mod display;
-
 use crate::comp::{humanoid, Body};
 use crate::display::Display;
 use clap::{App, Arg};
@@ -34,6 +33,7 @@ fn main() {
     let view_distance = 12;
     let tps = 60;
     let mut is_secondary_active: bool = false;
+    let mut is_primary_active: bool = false;
     let matches = App::new("Teloren")
         .version("0.1")
         .author("Joshua Barretto <joshua.s.barretto@gmail.com>")
@@ -84,17 +84,27 @@ fn main() {
     let character_name = matches.value_of("character").unwrap_or("");
 
     // Parse server socket
-    let server_spec = format!("{}:{}", server_addr, server_port);
-
+    let mut server_spec = format!("{}:{}", server_addr, server_port);
+    let mut server_spec2 = server_spec.clone();
     let runtime = Arc::new(Runtime::new().unwrap());
     let runtime2 = Arc::clone(&runtime);
-
     let mut client = runtime
         .block_on(async {
-            let addr = ConnectionArgs::resolve(&server_spec, false)
-                .await
-                .expect("dns resolve failed");
-            Client::new(addr, Some(view_distance), runtime2).await
+            let addr = ConnectionArgs::Tcp {
+                hostname: server_spec,
+                prefer_ipv6: false,
+            };
+
+            let mut mismatched_server_info = None;
+            Client::new(
+                ConnectionArgs::Tcp {
+                    hostname: server_spec2,
+                    prefer_ipv6: false,
+                },
+                Arc::clone(&runtime2),
+                &mut mismatched_server_info,
+            )
+            .await
         })
         .expect("Failed to create client instance");
 
@@ -244,7 +254,13 @@ fn main() {
                     client.handle_input(InputKind::Jump, true, None, None);
                 }
                 TermEvent::Key(Key::Char('x')) => {
-                    client.handle_input(InputKind::Primary, true, None, None);
+                    if is_primary_active {
+                        client.handle_input(InputKind::Primary, false, None, None);
+                        is_primary_active = false;
+                    } else {
+                        client.handle_input(InputKind::Primary, true, None, None);
+                        is_primary_active = true;
+                    }
                 }
                 TermEvent::Key(Key::Char('z')) => {
                     if is_secondary_active {
@@ -407,8 +423,8 @@ fn main() {
                         Body::QuadrupedLow(_) => '4',
                         Body::QuadrupedSmall(_) => 'q',
                         Body::QuadrupedMedium(_) => 'Q',
-                        Body::BirdSmall(_) => 'b',
-                        Body::BirdMedium(_) => 'B',
+                        Body::BirdMedium(_) => 'b',
+                        Body::BirdLarge(_) => 'B',
                         Body::FishSmall(_) => 'f',
                         Body::FishMedium(_) => 'F',
                         Body::BipedLarge(_) => '2',
@@ -456,10 +472,17 @@ fn main() {
                 "|  space - Jump         |"
             )
             .unwrap();
-            write!(
-                display.at((0, screen_size.y + 4)),
-                "|      x - Attack1      |"
-            )
+            if is_primary_active {
+                write!(
+                    display.at((0, screen_size.y + 4)),
+                    "|  x - Attack1 ACTIVE   |"
+                )
+            } else {
+                write!(
+                    display.at((0, screen_size.y + 4)),
+                    "|  x - Attack1 INACTIVE |"
+                )
+            }
             .unwrap();
             if is_secondary_active {
                 write!(
