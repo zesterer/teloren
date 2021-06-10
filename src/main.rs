@@ -32,6 +32,7 @@ fn main() {
     let screen_size = Vec2::new(80, 25);
     let view_distance = 12;
     let tps = 60;
+    let mut is_jump_active: bool = false;
     let mut is_secondary_active: bool = false;
     let mut is_primary_active: bool = false;
     let matches = App::new("Teloren")
@@ -251,7 +252,13 @@ fn main() {
                     _ => {}
                 },
                 TermEvent::Key(Key::Char(' ')) => {
-                    client.handle_input(InputKind::Jump, true, None, None);
+                    if is_jump_active {
+                        client.handle_input(InputKind::Jump, false, None, None);
+                        is_jump_active = false;
+                    } else {
+                        client.handle_input(InputKind::Jump, true, None, None);
+                        is_jump_active = true;
+                    }
                 }
                 TermEvent::Key(Key::Char('x')) => {
                     if is_primary_active {
@@ -467,10 +474,17 @@ fn main() {
                 "|  click - Move         |"
             )
             .unwrap();
-            write!(
-                display.at((0, screen_size.y + 3)),
-                "|  space - Jump         |"
-            )
+            if is_jump_active {
+                write!(
+                    display.at((0, screen_size.y + 3)),
+                    "|  x - Jump ACTIVE       |"
+                )
+            } else {
+                write!(
+                    display.at((0, screen_size.y + 3)),
+                    "|  x - Jump INACTIVE     |"
+                )
+            }
             .unwrap();
             if is_primary_active {
                 write!(
