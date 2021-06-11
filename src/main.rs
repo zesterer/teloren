@@ -20,23 +20,29 @@ use veloren_client::{
     addr::ConnectionArgs, Client, Event, Join, Marker, MarkerAllocator, WorldExt,
 };
 use veloren_common::{
-    clock::Clock,
-    comp,
-    comp::{Energy, Health, InputKind},
-    terrain::SpriteKind,
-    uid::UidAllocator,
-    vol::ReadVol,
+    clock::Clock, comp, comp::inventory::slot::Slot, comp::InputKind, terrain::SpriteKind,
+    uid::UidAllocator, vol::ReadVol,
 };
 
 fn main() {
     let screen_size = Vec2::new(80, 25);
     let view_distance = 12;
     let tps = 60;
+    let mut is_glide_active: bool = false;
+    let mut invpos = 1;
+    let mut arrowed1: Option<Slot> = None;
+    let mut arrowed2: Option<Slot> = None;
+    let mut arrowed: Option<Slot> = None;
+    let mut use_slotid: Option<Slot> = None;
+    let mut use_bool: bool = false;
+    let mut swap: bool = false;
+    let mut inv_toggle: bool = false;
+    let mut arrowedpos = 0;
     let mut is_jump_active: bool = false;
     let mut is_secondary_active: bool = false;
     let mut is_primary_active: bool = false;
     let matches = App::new("Teloren")
-        .version("0.1")
+        .version("0.2")
         .author("Joshua Barretto <joshua.s.barretto@gmail.com>")
         .about("A terminal Veloren client frontend")
         .arg(
@@ -83,11 +89,12 @@ fn main() {
     let username = matches.value_of("username").unwrap_or("teloren_user");
     let password = matches.value_of("password").unwrap_or("");
     let character_name = matches.value_of("character").unwrap_or("");
-
     // Parse server socket
+
     let mut server_spec = format!("{}:{}", server_addr, server_port);
     let mut server_spec2 = server_spec.clone();
     let runtime = Arc::new(Runtime::new().unwrap());
+
     let runtime2 = Arc::clone(&runtime);
     let mut client = runtime
         .block_on(async {
@@ -229,9 +236,14 @@ fn main() {
             match c.unwrap() {
                 TermEvent::Key(Key::Char(c)) if chat_input_enabled => match c {
                     '\n' => {
-                        client.send_chat(chat_input.clone());
-                        chat_input = String::new();
-                        chat_input_enabled = false;
+                        if chat_input.is_empty() {
+                            chat_input = String::new();
+                            chat_input_enabled = false;
+                        } else {
+                            client.send_chat(chat_input.clone());
+                            chat_input = String::new();
+                            chat_input_enabled = false;
+                        }
                     }
                     '\x08' => {
                         chat_input.pop();
@@ -245,6 +257,26 @@ fn main() {
                 TermEvent::Key(Key::Char('d')) => inputs.move_dir.x += 1.0,
                 TermEvent::Key(Key::Char('u')) => client.accept_invite(),
                 TermEvent::Key(Key::Char('i')) => client.decline_invite(),
+                TermEvent::Key(Key::Char('t')) => inv_toggle = !inv_toggle,
+                TermEvent::Key(Key::Down) => invpos = invpos + 1,
+                TermEvent::Key(Key::Up) => invpos = invpos - 1,
+                TermEvent::Key(Key::Right) => {
+                    if arrowedpos == 0 {
+                        arrowed1 = arrowed;
+                        arrowedpos = 1;
+                        swap = false;
+                    } else if arrowedpos == 1 {
+                        arrowed2 = arrowed;
+                        arrowedpos = 2;
+                    } else if arrowedpos <= 2 {
+                        swap = true;
+                        arrowedpos = 2;
+                    }
+                }
+                TermEvent::Key(Key::Left) => {
+                    use_slotid = arrowed;
+                    use_bool = true;
+                }
                 TermEvent::Mouse(me) => match me {
                     MouseEvent::Press(_, x, y) => {
                         tgt_pos = Some(from_screen_pos(Vec2::new(x, y), zoom_level))
@@ -278,7 +310,10 @@ fn main() {
                         is_secondary_active = true;
                     }
                 }
-                TermEvent::Key(Key::Char('g')) => client.toggle_glide(), //do_glide = !do_glide,
+                TermEvent::Key(Key::Char('g')) => {
+                    client.toggle_glide();
+                    is_glide_active = !is_glide_active //do_glide = !do_glide,
+                }
                 TermEvent::Key(Key::Char('r')) => client.respawn(),
                 TermEvent::Key(Key::Char('+')) => zoom_level /= 1.5,
                 TermEvent::Key(Key::Char('-')) => zoom_level *= 1.5,
@@ -295,9 +330,11 @@ fn main() {
                     .unwrap_or(Vec2::zero());
             }
         }
-
+        let mut events = client.tick(inputs, clock.dt(), |_| ()).unwrap();
+        let mut inventory_storage = client.state().ecs().read_storage::<comp::Inventory>();
+        let mut inventory = inventory_storage.get(client.entity());
         // Tick client
-        for event in client.tick(inputs, clock.dt(), |_| ()).unwrap() {
+        for event in events {
             match event {
                 Event::Chat(msg) => match msg.chat_type {
                     comp::ChatType::World(_) => chat_log.push(msg.message),
@@ -310,7 +347,6 @@ fn main() {
                 _ => {}
             }
         }
-        client.cleanup();
 
         // Drawing
         if tick % 6 == 0 {
@@ -420,12 +456,12 @@ fn main() {
                     let scr_pos = to_screen_pos(Vec2::from(pos.unwrap().0), zoom_level);
                     let character = match body.unwrap() {
                         Body::Humanoid(humanoid) => match humanoid.species {
-                            humanoid::Species::Danari => 'R',
-                            humanoid::Species::Dwarf => 'D',
-                            humanoid::Species::Elf => 'E',
-                            humanoid::Species::Human => 'H',
-                            humanoid::Species::Orc => 'O',
-                            humanoid::Species::Undead => 'U',
+                            humanoid::Species::Danari => '@',
+                            humanoid::Species::Dwarf => '@',
+                            humanoid::Species::Elf => '@',
+                            humanoid::Species::Human => '@',
+                            humanoid::Species::Orc => '@',
+                            humanoid::Species::Undead => '@',
                         },
                         Body::QuadrupedLow(_) => '4',
                         Body::QuadrupedSmall(_) => 'q',
@@ -438,9 +474,9 @@ fn main() {
                         Body::BipedSmall(_) => '2',
                         Body::Object(_) => 'o',
                         Body::Golem(_) => 'G',
-                        Body::Dragon(_) => 'S',
+                        Body::Dragon(_) => 'D',
                         Body::Theropod(_) => 'T',
-                        Body::Ship(_) => '_',
+                        Body::Ship(_) => 'S',
                         //_ => '?'
                     };
 
@@ -458,124 +494,159 @@ fn main() {
                     }
                 }
             }
+            if inv_toggle == false {
+                write!(
+                    display.at((0, screen_size.y + 0)),
+                    "/------- Controls ------\\"
+                )
+                .unwrap();
+                write!(
+                    display.at((0, screen_size.y + 1)),
+                    "|  wasd/click - Move    |"
+                )
+                .unwrap();
 
-            write!(
-                display.at((0, screen_size.y + 0)),
-                "/------- Controls ------\\"
-            )
-            .unwrap();
-            write!(
-                display.at((0, screen_size.y + 1)),
-                "|   wasd - Move         |"
-            )
-            .unwrap();
-            write!(
-                display.at((0, screen_size.y + 2)),
-                "|  click - Move         |"
-            )
-            .unwrap();
-            if is_jump_active {
+                if is_jump_active {
+                    write!(
+                        display.at((0, screen_size.y + 2)),
+                        "| SPACE  - Jump ACTIVE    |"
+                    )
+                } else {
+                    write!(
+                        display.at((0, screen_size.y + 2)),
+                        "| SPACE - Jump INACTIVE |"
+                    )
+                }
+                .unwrap();
+
+                if is_primary_active {
+                    write!(
+                        display.at((0, screen_size.y + 3)),
+                        "|  x - Attack1 ACTIVE   |"
+                    )
+                } else {
+                    write!(
+                        display.at((0, screen_size.y + 3)),
+                        "|  x - Attack1 INACTIVE |"
+                    )
+                }
+                .unwrap();
+
+                if is_secondary_active {
+                    write!(
+                        display.at((0, screen_size.y + 4)),
+                        "|  z - Attack2 ACTIVE   |"
+                    )
+                } else {
+                    write!(
+                        display.at((0, screen_size.y + 4)),
+                        "|  z - Attack2 INACTIVE |"
+                    )
+                }
+                .unwrap();
+
+                if is_glide_active {
+                    write!(
+                        display.at((0, screen_size.y + 5)),
+                        "|  z - Glide ACTIVE     |"
+                    )
+                } else {
+                    write!(
+                        display.at((0, screen_size.y + 5)),
+                        "|  g - Glide INACTIVE   |"
+                    )
+                }
+                .unwrap();
+
                 write!(
-                    display.at((0, screen_size.y + 3)),
-                    "|  x - Jump ACTIVE       |"
+                    display.at((0, screen_size.y + 6)),
+                    "|      r - Respawn      |"
                 )
+                .unwrap();
+
+                write!(
+                    display.at((0, screen_size.y + 7)),
+                    "|      q - Quit         |"
+                )
+                .unwrap();
+
+                write!(
+                    display.at((0, screen_size.y + 8)),
+                    "|      + - Zoom in      |"
+                )
+                .unwrap();
+
+                write!(
+                    display.at((0, screen_size.y + 9)),
+                    "|      - - Zoom out     |"
+                )
+                .unwrap();
+
+                write!(
+                    display.at((0, screen_size.y + 10)),
+                    "| return - Chat         |"
+                )
+                .unwrap();
+
+                write!(
+                    display.at((0, screen_size.y + 11)),
+                    "|{} |",
+                    &format!(
+                        "Current Health - {}/{}",
+                        current_health / 10,
+                        max_health / 10
+                    )
+                )
+                .unwrap();
+
+                write!(
+                    display.at((0, screen_size.y + 12)),
+                    "|{} |",
+                    &format!(
+                        "Current Energy - {}/{}",
+                        current_energy / 10,
+                        max_energy / 10
+                    )
+                )
+                .unwrap();
+
+                write!(
+                    display.at((0, screen_size.y + 13)),
+                    "|Up/Down - Navigate Inv.|"
+                )
+                .unwrap();
+
+                write!(
+                    display.at((0, screen_size.y + 14)),
+                    "| Left/Right - Use/Swap |"
+                )
+                .unwrap();
             } else {
-                write!(
-                    display.at((0, screen_size.y + 3)),
-                    "|  x - Jump INACTIVE     |"
-                )
             }
-            .unwrap();
-            if is_primary_active {
-                write!(
-                    display.at((0, screen_size.y + 4)),
-                    "|  x - Attack1 ACTIVE   |"
-                )
-            } else {
-                write!(
-                    display.at((0, screen_size.y + 4)),
-                    "|  x - Attack1 INACTIVE |"
-                )
-            }
-            .unwrap();
-            if is_secondary_active {
-                write!(
-                    display.at((0, screen_size.y + 5)),
-                    "|  z - Attack2 ACTIVE   |"
-                )
-            } else {
-                write!(
-                    display.at((0, screen_size.y + 5)),
-                    "|  z - Attack2 INACTIVE |"
-                )
-            }
-            .unwrap();
             write!(
-                display.at((0, screen_size.y + 6)),
-                "|      g - toggle glide |"
-            )
-            .unwrap();
-            write!(
-                display.at((0, screen_size.y + 7)),
-                "|      r - Respawn      |"
-            )
-            .unwrap();
-            write!(
-                display.at((0, screen_size.y + 8)),
-                "|      q - Quit         |"
-            )
-            .unwrap();
-            write!(
-                display.at((0, screen_size.y + 9)),
-                "|      + - Zoom in      |"
-            )
-            .unwrap();
-            write!(
-                display.at((0, screen_size.y + 10)),
-                "|      - - Zoom out     |"
-            )
-            .unwrap();
-            write!(
-                display.at((0, screen_size.y + 11)),
-                "| return - Chat         |"
-            )
-            .unwrap();
-            write!(
-                display.at((0, screen_size.y + 12)),
-                "{}",
-                &format!("Current Health - {}/{}", current_health, max_health)
-            )
-            .unwrap();
-            write!(
-                display.at((0, screen_size.y + 13)),
-                "{}",
-                &format!("Current Energy - {}/{}", current_energy, max_energy)
-            )
-            .unwrap();
-            write!(
-                display.at((0, screen_size.y + 14)),
-                "\\------------------------/"
+                display.at((0, screen_size.y + 15)),
+                "... T - Toggle Inv ... "
             )
             .unwrap();
             if inviter_uid.is_some() {
                 write!(
-                    display.at((0, screen_size.y + 15)),
+                    display.at((0, screen_size.y + 16)),
                     "{:?}",
                     &format!(
-                        "You've been invited to {:?} by {:?}. Accept [U] or Decline [I]?",
+                        "{:?} Invite from {:?}. Accept[U]/Decline[I]",
                         invite_kind, inviter_username
                     )
                 )
             } else {
-                write!(display.at((0, screen_size.y + 15)), " ")
+                write!(display.at((0, screen_size.y + 16)),"                                                                                                  ")
             }
             .unwrap();
 
             let clear = "                                                                ";
             for (i, msg) in chat_log.iter().rev().take(10).enumerate() {
-                write!(display.at((24, screen_size.y + 10 - i as u16)), "{}", clear).unwrap();
+                write!(display.at((30, screen_size.y + 10 - i as u16)), "{}", clear).unwrap();
                 write!(
-                    display.at((24, screen_size.y + 10 - i as u16)),
+                    display.at((30, screen_size.y + 10 - i as u16)),
                     "{}",
                     msg.get(0..48).unwrap_or(&msg)
                 )
@@ -587,7 +658,47 @@ fn main() {
 
         // Finish drawing
         display.flush();
+        //Inventory Stuff Code, has to be done at the end of the block.
+        if let Some(inv) = inventory {
+            for (itr, (invslotid, item_option)) in inv.slots_with_id().enumerate() {
+                if let Some(item) = item_option {
+                    let current = (itr as u16) + 1;
+                    if inv_toggle {
+                        if invpos as u16 == current {
+                            arrowed = Some(Slot::Inventory(invslotid));
+                            write!(
+                                display.at((0, screen_size.y + current)),
+                                "Item: {}{}",
+                                item.name(),
+                                "<--"
+                            )
+                            .unwrap();
+                        } else {
+                            write!(
+                                display.at((0, screen_size.y + current)),
+                                "Item: {}{}",
+                                item.name(),
+                                "        "
+                            )
+                            .unwrap();
+                        }
+                    } else {
+                    }
+                }
+            }
+        }
+        drop(inventory_storage);
+        if let (Some(left), Some(right), Some(useid)) = (arrowed1, arrowed2, use_slotid) {
+            client.swap_slots(left, right);
+            arrowed1 = None;
+            arrowed2 = None;
+            arrowedpos = 0;
 
+            if use_bool {
+                client.use_slot(useid);
+            }
+        }
+        client.cleanup();
         // Wait for next tick
         clock.tick();
     }
