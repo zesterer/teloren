@@ -23,16 +23,17 @@ Currently implemented
 - World rendering
 - Object rendering
 - Basic movement
-- Accepting a group invite
-- Health & Energy
+- Basic HUD
 - Basic combat 
+- Inventory manipulation
+- Accepting a group invite
 - Chat
 
 To be implemented
 
 - Build mode
 - Lighting
-- Alias overlays, HUD
+- Who's near you
 - Picking up objects
 
 ## Why?
