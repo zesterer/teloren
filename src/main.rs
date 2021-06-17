@@ -34,7 +34,7 @@ fn main() {
     let mut arrowed2: Option<Slot> = None;
     let mut arrowed: Option<Slot> = None;
     let mut use_slotid: Option<Slot> = None;
-    let mut use_bool: bool = false;
+    let mut use_item: bool = false;
     let mut swap: bool = false;
     let mut inv_toggle: bool = false;
     let mut arrowedpos = 0;
@@ -276,7 +276,7 @@ fn main() {
                 }
                 TermEvent::Key(Key::Left) => {
                     use_slotid = arrowed;
-                    use_bool = true;
+                    use_item = true;
                 }
                 TermEvent::Mouse(me) => match me {
                     MouseEvent::Press(_, x, y) => {
@@ -695,7 +695,7 @@ fn main() {
             arrowed2 = None;
             arrowedpos = 0;
 
-            if use_bool {
+            if use_item {
                 client.use_slot(useid);
             }
         }
