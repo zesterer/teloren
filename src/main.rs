@@ -259,14 +259,17 @@ fn main() {
                 TermEvent::Key(Key::Down) => invpos = invpos + 1,
                 TermEvent::Key(Key::Up) => invpos = invpos - 1,
                 TermEvent::Key(Key::Right) => {
-                    if arrowedpos == 0 {
+                 match arrowedpos {
+                    0 => {
                         arrowed1 = arrowed;
                         arrowedpos = 1;
                         swap = false;
-                    } else if arrowedpos == 1 {
+                    } 
+                   1 => {
                         arrowed2 = arrowed;
                         arrowedpos = 2;
-                    } else if arrowedpos <= 2 {
+                    } 
+                   _ => {
                         swap = true;
                         arrowedpos = 2;
                     }
