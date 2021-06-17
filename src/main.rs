@@ -237,13 +237,11 @@ fn main() {
                 TermEvent::Key(Key::Char(c)) if chat_input_enabled => match c {
                     '\n' => {
                         if chat_input.is_empty() {
-                            chat_input = String::new();
-                            chat_input_enabled = false;
                         } else {
                             client.send_chat(chat_input.clone());
                             chat_input = String::new();
-                            chat_input_enabled = false;
                         }
+                        chat_input_enabled = false;
                     }
                     '\x08' => {
                         chat_input.pop();
