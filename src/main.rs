@@ -273,6 +273,7 @@ fn main() {
                         swap = true;
                         arrowedpos = 2;
                     }
+                                }
                 }
                 TermEvent::Key(Key::Left) => {
                     use_slotid = arrowed;
