@@ -1,9 +1,10 @@
 # Teloren ('Telnet' + 'Veloren')
+![Build Check](https://github.com/zesterer/teloren/actions/workflows/rust.yml/badge.svg) 
 
 Teloren is an ANSI-compatible terminal frontend to Veloren, the multiplayer RPG voxel game written in Rust.
 Teloren is currently still very much a work in progress and I strongly recommend you play with the [3D frontend](https://www.veloren.net) first.
 
-![alt text](misc/screenshot.png "Teloren")
+![alt text](misc/image.png "Teloren")
 
 ## Usage
 
@@ -22,16 +23,17 @@ Currently implemented
 - World rendering
 - Object rendering
 - Basic movement
-- Accepting a group invite
-- Health & Energy
+- Basic HUD
 - Basic combat 
+- Inventory manipulation
+- Accepting a group invite
 - Chat
 
 To be implemented
 
 - Build mode
 - Lighting
-- Alias overlays, HUD
+- Who's near you
 - Picking up objects
 
 ## Why?
