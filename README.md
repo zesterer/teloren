@@ -4,7 +4,7 @@
 Teloren is an ANSI-compatible terminal frontend to Veloren, the multiplayer RPG voxel game written in Rust.
 Teloren is currently still very much a work in progress and I strongly recommend you play with the [3D frontend](https://www.veloren.net) first.
 
-![alt text](misc/image.png "Teloren")
+![alt text](misc/image.png "Teloren") 
 
 ## Usage
 
