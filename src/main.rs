@@ -238,7 +238,15 @@ fn main() {
                     '\n' => {
                         if chat_input.is_empty() {
                         } else {
-                            client.send_chat(chat_input.clone());
+                            if chat_input.clone().starts_with('/') {
+                                let mut argv = chat_input.clone();
+                                client.send_command(
+                                    argv.split_whitespace().next().unwrap().to_owned(),
+                                    argv.split_whitespace().map(|s| s.to_owned()).collect(),
+                                );
+                            } else {
+                                client.send_chat(chat_input.clone())
+                            }
                             chat_input = String::new();
                         }
                         chat_input_enabled = false;
@@ -258,23 +266,21 @@ fn main() {
                 TermEvent::Key(Key::Char('t')) => inv_toggle = !inv_toggle,
                 TermEvent::Key(Key::Down) => invpos = invpos + 1,
                 TermEvent::Key(Key::Up) => invpos = invpos - 1,
-                TermEvent::Key(Key::Right) => {
-                 match arrowedpos {
+                TermEvent::Key(Key::Right) => match arrowedpos {
                     0 => {
                         arrowed1 = arrowed;
                         arrowedpos = 1;
                         swap = false;
-                    } 
-                   1 => {
+                    }
+                    1 => {
                         arrowed2 = arrowed;
                         arrowedpos = 2;
-                    } 
-                   _ => {
+                    }
+                    _ => {
                         swap = true;
                         arrowedpos = 2;
                     }
-                                }
-                }
+                },
                 TermEvent::Key(Key::Left) => {
                     use_slotid = arrowed;
                     use_item = true;
