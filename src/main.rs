@@ -599,11 +599,7 @@ fn main() {
                 write!(
                     display.at((0, screen_size.y + 11)),
                     "|{} |",
-                    &format!(
-                        "Current Health - {:2.0}/{:2.0}",
-                        current_health / 10.0,
-                        max_health / 10.0
-                    )
+                    &format!("Current Health - {:.0}/{:.0}", current_health, max_health)
                 )
                 .unwrap();
 
