@@ -177,7 +177,7 @@ fn main() {
         // Get Health and Energy
         let (current_health, max_health) = client
             .current::<comp::Health>()
-            .map_or((0, 0), |health| (health.current(), health.maximum()));
+            .map_or((0.0, 0.0), |health| (health.current(), health.maximum()));
         let (current_energy, max_energy) = client
             .current::<comp::Energy>()
             .map_or((0, 0), |energy| (energy.current(), energy.maximum()));
@@ -600,9 +600,9 @@ fn main() {
                     display.at((0, screen_size.y + 11)),
                     "|{} |",
                     &format!(
-                        "Current Health - {}/{}",
-                        current_health / 10,
-                        max_health / 10
+                        "Current Health - {:2.0}/{:2.0}",
+                        current_health / 10.0,
+                        max_health / 10.0
                     )
                 )
                 .unwrap();
