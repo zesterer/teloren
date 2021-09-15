@@ -1462,9 +1462,9 @@ dependencies = [
 
 [[package]]
 name = "serde_json"
-version = "1.0.67"
+version = "1.0.68"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "a7f9e390c27c3c0ce8bc5d725f6e4d30a29d26659494aa4b17535f7522c5c950"
+checksum = "0f690853975602e1bfe1ccbf50504d67174e3bcf340f23b5ea9992e0587a52d8"
 dependencies = [
  "itoa",
  "ryu",
@@ -1946,7 +1946,7 @@ dependencies = [
 [[package]]
 name = "veloren-client"
 version = "0.11.0"
-source = "git+https://gitlab.com/veloren/veloren.git?branch=master#b92e07963ccf28a6eac64eed06a26102be411ead"
+source = "git+https://gitlab.com/veloren/veloren.git?branch=master#d13391f16e49ac3cca6022ac89fbc7d3890f4d82"
 dependencies = [
  "authc",
  "byteorder",
@@ -1970,7 +1970,7 @@ dependencies = [
 [[package]]
 name = "veloren-common"
 version = "0.10.0"
-source = "git+https://gitlab.com/veloren/veloren.git?branch=master#b92e07963ccf28a6eac64eed06a26102be411ead"
+source = "git+https://gitlab.com/veloren/veloren.git?branch=master#d13391f16e49ac3cca6022ac89fbc7d3890f4d82"
 dependencies = [
  "approx",
  "bitflags",
@@ -2008,7 +2008,7 @@ dependencies = [
 [[package]]
 name = "veloren-common-assets"
 version = "0.10.0"
-source = "git+https://gitlab.com/veloren/veloren.git?branch=master#b92e07963ccf28a6eac64eed06a26102be411ead"
+source = "git+https://gitlab.com/veloren/veloren.git?branch=master#d13391f16e49ac3cca6022ac89fbc7d3890f4d82"
 dependencies = [
  "assets_manager",
  "dot_vox",
@@ -2021,7 +2021,7 @@ dependencies = [
 [[package]]
 name = "veloren-common-base"
 version = "0.10.0"
-source = "git+https://gitlab.com/veloren/veloren.git?branch=master#b92e07963ccf28a6eac64eed06a26102be411ead"
+source = "git+https://gitlab.com/veloren/veloren.git?branch=master#d13391f16e49ac3cca6022ac89fbc7d3890f4d82"
 dependencies = [
  "directories-next",
  "tracing",
@@ -2030,7 +2030,7 @@ dependencies = [
 [[package]]
 name = "veloren-common-ecs"
 version = "0.10.0"
-source = "git+https://gitlab.com/veloren/veloren.git?branch=master#b92e07963ccf28a6eac64eed06a26102be411ead"
+source = "git+https://gitlab.com/veloren/veloren.git?branch=master#d13391f16e49ac3cca6022ac89fbc7d3890f4d82"
 dependencies = [
  "specs 0.16.2",
  "tracing",
@@ -2040,7 +2040,7 @@ dependencies = [
 [[package]]
 name = "veloren-common-net"
 version = "0.10.0"
-source = "git+https://gitlab.com/veloren/veloren.git?branch=master#b92e07963ccf28a6eac64eed06a26102be411ead"
+source = "git+https://gitlab.com/veloren/veloren.git?branch=master#d13391f16e49ac3cca6022ac89fbc7d3890f4d82"
 dependencies = [
  "bincode",
  "flate2",
@@ -2059,7 +2059,7 @@ dependencies = [
 [[package]]
 name = "veloren-common-state"
 version = "0.10.0"
-source = "git+https://gitlab.com/veloren/veloren.git?branch=master#b92e07963ccf28a6eac64eed06a26102be411ead"
+source = "git+https://gitlab.com/veloren/veloren.git?branch=master#d13391f16e49ac3cca6022ac89fbc7d3890f4d82"
 dependencies = [
  "hashbrown 0.11.2",
  "num_cpus",
@@ -2077,7 +2077,7 @@ dependencies = [
 [[package]]
 name = "veloren-common-systems"
 version = "0.10.0"
-source = "git+https://gitlab.com/veloren/veloren.git?branch=master#b92e07963ccf28a6eac64eed06a26102be411ead"
+source = "git+https://gitlab.com/veloren/veloren.git?branch=master#d13391f16e49ac3cca6022ac89fbc7d3890f4d82"
 dependencies = [
  "hashbrown 0.11.2",
  "indexmap",
@@ -2097,7 +2097,7 @@ dependencies = [
 [[package]]
 name = "veloren-network"
 version = "0.3.0"
-source = "git+https://gitlab.com/veloren/veloren.git?branch=master#b92e07963ccf28a6eac64eed06a26102be411ead"
+source = "git+https://gitlab.com/veloren/veloren.git?branch=master#d13391f16e49ac3cca6022ac89fbc7d3890f4d82"
 dependencies = [
  "async-channel",
  "async-trait",
@@ -2122,7 +2122,7 @@ dependencies = [
 [[package]]
 name = "veloren-network-protocol"
 version = "0.6.0"
-source = "git+https://gitlab.com/veloren/veloren.git?branch=master#b92e07963ccf28a6eac64eed06a26102be411ead"
+source = "git+https://gitlab.com/veloren/veloren.git?branch=master#d13391f16e49ac3cca6022ac89fbc7d3890f4d82"
 dependencies = [
  "async-trait",
  "bitflags",
