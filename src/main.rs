@@ -180,7 +180,7 @@ fn main() {
             .map_or((0.0, 0.0), |health| (health.current(), health.maximum()));
         let (current_energy, max_energy) = client
             .current::<comp::Energy>()
-            .map_or((0, 0), |energy| (energy.current(), energy.maximum()));
+            .map_or((0.0, 0.0), |energy| (energy.current(), energy.maximum()));
 
         // Invite Logic
         let (inviter_uid, invite_kind) =
@@ -607,9 +607,9 @@ fn main() {
                     display.at((0, screen_size.y + 12)),
                     "|{} |",
                     &format!(
-                        "Current Energy - {}/{}",
-                        current_energy / 10,
-                        max_energy / 10
+                        "Current Energy - {:.0}/{:.0}",
+                        current_energy,
+                        max_energy
                     )
                 )
                 .unwrap();
