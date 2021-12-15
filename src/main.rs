@@ -35,7 +35,7 @@ fn main() {
     let mut arrowed: Option<Slot> = None;
     let mut use_slotid: Option<Slot> = None;
     let mut use_item: bool = false;
-    let mut swap: bool = false;
+    // let mut swap: bool = false;
     let mut inv_toggle: bool = false;
     let mut arrowedpos = 0;
     let mut is_jump_active: bool = false;
@@ -91,14 +91,14 @@ fn main() {
     let character_name = matches.value_of("character").unwrap_or("");
     // Parse server socket
 
-    let mut server_spec = format!("{}:{}", server_addr, server_port);
-    let mut server_spec2 = server_spec.clone();
+    let server_spec = format!("{}:{}", server_addr, server_port);
+    let server_spec2 = server_spec.clone();
     let runtime = Arc::new(Runtime::new().unwrap());
 
     let runtime2 = Arc::clone(&runtime);
     let mut client = runtime
         .block_on(async {
-            let addr = ConnectionArgs::Tcp {
+            let _addr = ConnectionArgs::Tcp {
                 hostname: server_spec,
                 prefer_ipv6: false,
             };
@@ -160,7 +160,7 @@ fn main() {
     let stdin = stdin();
     let (key_tx, key_rx) = mpsc::channel();
     thread::spawn(move || {
-        stdin.lock();
+        let _ = stdin.lock();
         for c in stdin.events() {
             key_tx.send(c).unwrap();
         }
@@ -239,7 +239,7 @@ fn main() {
                         if chat_input.is_empty() {
                         } else {
                             if chat_input.clone().starts_with('/') {
-                                let mut argv = chat_input.clone();
+                                let argv = chat_input.clone();
                                 client.send_command(
                                     argv.split_whitespace().next().unwrap().to_owned(),
                                     argv.split_whitespace().map(|s| s.to_owned()).collect(),
@@ -270,14 +270,14 @@ fn main() {
                     0 => {
                         arrowed1 = arrowed;
                         arrowedpos = 1;
-                        swap = false;
+                        // swap = false;
                     }
                     1 => {
                         arrowed2 = arrowed;
                         arrowedpos = 2;
                     }
                     _ => {
-                        swap = true;
+                        // swap = true;
                         arrowedpos = 2;
                     }
                 },
@@ -338,9 +338,9 @@ fn main() {
                     .unwrap_or(Vec2::zero());
             }
         }
-        let mut events = client.tick(inputs, clock.dt(), |_| ()).unwrap();
-        let mut inventory_storage = client.state().ecs().read_storage::<comp::Inventory>();
-        let mut inventory = inventory_storage.get(client.entity());
+        let events = client.tick(inputs, clock.dt(), |_| ()).unwrap();
+        let inventory_storage = client.state().ecs().read_storage::<comp::Inventory>();
+        let inventory = inventory_storage.get(client.entity());
         // Tick client
         for event in events {
             match event {
