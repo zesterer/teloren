@@ -1,7 +1,7 @@
 mod display;
 use crate::comp::{humanoid, Body};
 use crate::display::Display;
-use clap::{App, Arg};
+use clap::{Command, Arg};
 use std::{
     io::{stdin, stdout, Write},
     process,
@@ -41,40 +41,40 @@ fn main() {
     let mut is_jump_active: bool = false;
     let mut is_secondary_active: bool = false;
     let mut is_primary_active: bool = false;
-    let matches = App::new("Teloren")
+    let matches = Command::new("Teloren")
         .version("0.2")
         .author("Joshua Barretto <joshua.s.barretto@gmail.com>")
         .about("A terminal Veloren client frontend")
         .arg(
-            Arg::with_name("username")
+            Arg::new("username")
                 .long("username")
                 .value_name("USERNAME")
                 .help("Set the username used to log in")
                 .takes_value(true),
         )
         .arg(
-            Arg::with_name("password")
+            Arg::new("password")
                 .long("password")
                 .value_name("PASSWORD")
                 .help("Set the password to log in with")
                 .takes_value(true),
         )
         .arg(
-            Arg::with_name("server")
+            Arg::new("server")
                 .long("server")
                 .value_name("SERVER_ADDR")
                 .help("Set the server address")
                 .takes_value(true),
         )
         .arg(
-            Arg::with_name("port")
+            Arg::new("port")
                 .long("port")
                 .value_name("PORT")
                 .help("Set the server port")
                 .takes_value(true),
         )
         .arg(
-            Arg::with_name("character")
+            Arg::new("character")
                 .long("character")
                 .value_name("CHARACTER")
                 .help("Select the character to play")
@@ -117,7 +117,7 @@ fn main() {
         .expect("Failed to create client instance");
 
     println!("Server info: {:?}", client.server_info());
-    println!("Players: {:?}", client.get_players());
+    println!("Players: {:?}", client.player_list());
 
     runtime
         .block_on(
@@ -485,6 +485,8 @@ fn main() {
                         Body::Dragon(_) => 'D',
                         Body::Theropod(_) => 'T',
                         Body::Ship(_) => 'S',
+                        Body::Arthropod(_) => 'A',
+                        Body::ItemDrop(_) => 'I',
                         //_ => '?'
                     };
 
