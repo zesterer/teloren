@@ -7,7 +7,7 @@ edition = "2021"
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
-vek = { version = "=0.14.1", features = ["serde"] }
+vek = { version = "0.15.8", features = ["serde"] }
 termion = "1.5"
 clap = "3.1"
 specs = { git = "https://github.com/amethyst/specs.git", rev = "d4435bdf496cf322c74886ca09dd8795984919b4" }
