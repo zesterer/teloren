@@ -1,7 +1,7 @@
 mod display;
 use crate::comp::{humanoid, Body};
 use crate::display::Display;
-use clap::{Command, Arg};
+use clap::{Arg, Command};
 use std::{
     io::{stdin, stdout, Write},
     process,
@@ -469,7 +469,7 @@ fn main() {
                             humanoid::Species::Elf => '@',
                             humanoid::Species::Human => '@',
                             humanoid::Species::Orc => '@',
-                            humanoid::Species::Undead => '@',
+                            humanoid::Species::Draugr => '@',
                         },
                         Body::QuadrupedLow(_) => '4',
                         Body::QuadrupedSmall(_) => 'q',
@@ -608,11 +608,7 @@ fn main() {
                 write!(
                     display.at((0, screen_size.y + 12)),
                     "|{} |",
-                    &format!(
-                        "Current Energy - {:.0}/{:.0}",
-                        current_energy,
-                        max_energy
-                    )
+                    &format!("Current Energy - {:.0}/{:.0}", current_energy, max_energy)
                 )
                 .unwrap();
 

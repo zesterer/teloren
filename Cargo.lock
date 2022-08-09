@@ -77,6 +77,12 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "23b62fc65de8e4e7f52534fb52b0f3ed04746ae267519eef2a83941e8085068b"
 
 [[package]]
+name = "arrayvec"
+version = "0.7.2"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "8da52d66c7071e2e3fa2a1e5c6d088fec47b593032b254f5e980de8ea54454d6"
+
+[[package]]
 name = "assets_manager"
 version = "0.8.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -191,7 +197,7 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "afa748e348ad3be8263be728124b24a24f268266f6f5d58af9d75f6a40b5c587"
 dependencies = [
  "arrayref",
- "arrayvec",
+ "arrayvec 0.5.2",
  "constant_time_eq",
 ]
 
@@ -702,11 +708,6 @@ name = "hashbrown"
 version = "0.11.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "ab5ef0d4909ef3724cc8cce6ccc8572c5c817592e9285f5464f8e86f8bd3726e"
-dependencies = [
- "ahash 0.7.6",
- "rayon",
- "serde",
-]
 
 [[package]]
 name = "hashbrown"
@@ -715,6 +716,8 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "db0d4cf898abf0081f964436dc980e96670a0f36863e4b83aaacdb65c9d7ccc3"
 dependencies = [
  "ahash 0.7.6",
+ "rayon",
+ "serde",
 ]
 
 [[package]]
@@ -1097,6 +1100,15 @@ name = "ordered-float"
 version = "2.10.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "7940cf2ca942593318d07fcf2596cdca60a85c9e7fab408a5e21a4f9dcd40d87"
+dependencies = [
+ "num-traits",
+]
+
+[[package]]
+name = "ordered-float"
+version = "3.0.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "96bcbab4bfea7a59c2c0fe47211a1ac4e3e96bea6eb446d704f310bc5c732ae2"
 dependencies = [
  "num-traits",
 ]
@@ -1646,7 +1658,7 @@ version = "0.10.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "c5f08237e667ac94ad20f8878b5943d91a93ccb231428446c57c21c57779016d"
 dependencies = [
- "arrayvec",
+ "arrayvec 0.5.2",
  "hashbrown 0.7.2",
  "mopa",
  "rayon",
@@ -1656,12 +1668,12 @@ dependencies = [
 
 [[package]]
 name = "shred"
-version = "0.12.0"
+version = "0.13.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "eb0210289d693217926314867c807e0b7b42f7e23c136adb31f8697f5bf242d3"
+checksum = "102269e720bb814df57e136161cad841f2b6f411e003ac748fc48aaf2363bea3"
 dependencies = [
- "arrayvec",
- "hashbrown 0.11.2",
+ "arrayvec 0.7.2",
+ "hashbrown 0.12.1",
  "mopa",
  "rayon",
  "shred-derive",
@@ -1736,42 +1748,36 @@ dependencies = [
  "rayon",
  "shred 0.10.2",
  "shrev",
- "tuple_utils",
+ "tuple_utils 0.3.0",
 ]
 
 [[package]]
 name = "specs"
-version = "0.16.2"
-source = "git+https://github.com/amethyst/specs.git?rev=f985bec5d456f7b0dd8aae99848f9473c2cd9d46#f985bec5d456f7b0dd8aae99848f9473c2cd9d46"
+version = "0.18.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "4ea85dac2880f84d4025ff5ace80cda6d8bc43bc88b6a389b9277fcf894b51e9"
 dependencies = [
  "crossbeam-queue",
- "hashbrown 0.11.2",
+ "hashbrown 0.12.1",
  "hibitset",
  "log",
  "rayon",
  "serde",
- "shred 0.12.0",
+ "shred 0.13.0",
  "shrev",
  "specs-derive",
- "tuple_utils",
+ "tuple_utils 0.4.0",
 ]
 
 [[package]]
 name = "specs-derive"
 version = "0.4.1"
-source = "git+https://github.com/amethyst/specs.git?rev=f985bec5d456f7b0dd8aae99848f9473c2cd9d46#f985bec5d456f7b0dd8aae99848f9473c2cd9d46"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "3e23e09360f3d2190fec4222cd9e19d3158d5da948c0d1ea362df617dd103511"
 dependencies = [
  "proc-macro2",
  "quote",
  "syn",
-]
-
-[[package]]
-name = "specs-idvs"
-version = "0.1.1"
-source = "git+https://gitlab.com/veloren/specs-idvs.git?rev=8be2abcddf8f524cb5876e8dd20a7e47cfaf7573#8be2abcddf8f524cb5876e8dd20a7e47cfaf7573"
-dependencies = [
- "specs 0.16.2",
 ]
 
 [[package]]
@@ -2057,6 +2063,12 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "44834418e2c5b16f47bedf35c28e148db099187dd5feee6367fb2525863af4f1"
 
 [[package]]
+name = "tuple_utils"
+version = "0.4.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "cffaaf9392ef73cd30828797152476aaa2fa37a17856934fa63d4843f34290e9"
+
+[[package]]
 name = "twox-hash"
 version = "1.6.3"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -2140,17 +2152,17 @@ dependencies = [
 
 [[package]]
 name = "veloren-client"
-version = "0.12.0"
-source = "git+https://gitlab.com/veloren/veloren.git?branch=master#f2ece25b79a1c9138f59737e8fb04808257a8229"
+version = "0.13.0"
+source = "git+https://gitlab.com/veloren/veloren.git?branch=master#cc6a4c92f52daf20a8e35d42417ad686cf6fdb7d"
 dependencies = [
  "authc",
  "byteorder",
- "hashbrown 0.11.2",
+ "hashbrown 0.12.1",
  "image",
  "num",
  "quinn",
  "rayon",
- "specs 0.16.2",
+ "specs 0.18.0",
  "tokio",
  "tracing",
  "vek",
@@ -2165,7 +2177,7 @@ dependencies = [
 [[package]]
 name = "veloren-common"
 version = "0.10.0"
-source = "git+https://gitlab.com/veloren/veloren.git?branch=master#f2ece25b79a1c9138f59737e8fb04808257a8229"
+source = "git+https://gitlab.com/veloren/veloren.git?branch=master#cc6a4c92f52daf20a8e35d42417ad686cf6fdb7d"
 dependencies = [
  "approx 0.4.0",
  "bitflags",
@@ -2177,12 +2189,12 @@ dependencies = [
  "dot_vox",
  "enum-iterator",
  "fxhash",
- "hashbrown 0.11.2",
+ "hashbrown 0.12.1",
  "indexmap",
  "lazy_static",
  "num-derive",
  "num-traits",
- "ordered-float",
+ "ordered-float 2.10.0",
  "rand",
  "rayon",
  "roots",
@@ -2192,8 +2204,7 @@ dependencies = [
  "sha2",
  "slab",
  "slotmap",
- "specs 0.16.2",
- "specs-idvs",
+ "specs 0.18.0",
  "spin_sleep",
  "strum",
  "tracing",
@@ -2206,7 +2217,7 @@ dependencies = [
 [[package]]
 name = "veloren-common-assets"
 version = "0.10.0"
-source = "git+https://gitlab.com/veloren/veloren.git?branch=master#f2ece25b79a1c9138f59737e8fb04808257a8229"
+source = "git+https://gitlab.com/veloren/veloren.git?branch=master#cc6a4c92f52daf20a8e35d42417ad686cf6fdb7d"
 dependencies = [
  "assets_manager",
  "dot_vox",
@@ -2220,7 +2231,7 @@ dependencies = [
 [[package]]
 name = "veloren-common-base"
 version = "0.10.0"
-source = "git+https://gitlab.com/veloren/veloren.git?branch=master#f2ece25b79a1c9138f59737e8fb04808257a8229"
+source = "git+https://gitlab.com/veloren/veloren.git?branch=master#cc6a4c92f52daf20a8e35d42417ad686cf6fdb7d"
 dependencies = [
  "directories-next",
  "tracing",
@@ -2229,9 +2240,9 @@ dependencies = [
 [[package]]
 name = "veloren-common-ecs"
 version = "0.10.0"
-source = "git+https://gitlab.com/veloren/veloren.git?branch=master#f2ece25b79a1c9138f59737e8fb04808257a8229"
+source = "git+https://gitlab.com/veloren/veloren.git?branch=master#cc6a4c92f52daf20a8e35d42417ad686cf6fdb7d"
 dependencies = [
- "specs 0.16.2",
+ "specs 0.18.0",
  "tracing",
  "veloren-common-base",
 ]
@@ -2239,16 +2250,15 @@ dependencies = [
 [[package]]
 name = "veloren-common-net"
 version = "0.10.0"
-source = "git+https://gitlab.com/veloren/veloren.git?branch=master#f2ece25b79a1c9138f59737e8fb04808257a8229"
+source = "git+https://gitlab.com/veloren/veloren.git?branch=master#cc6a4c92f52daf20a8e35d42417ad686cf6fdb7d"
 dependencies = [
  "bincode",
  "flate2",
- "hashbrown 0.11.2",
+ "hashbrown 0.12.1",
  "image",
  "num-traits",
  "serde",
- "specs 0.16.2",
- "specs-idvs",
+ "specs 0.18.0",
  "sum_type",
  "tracing",
  "vek",
@@ -2258,13 +2268,13 @@ dependencies = [
 [[package]]
 name = "veloren-common-state"
 version = "0.10.0"
-source = "git+https://gitlab.com/veloren/veloren.git?branch=master#f2ece25b79a1c9138f59737e8fb04808257a8229"
+source = "git+https://gitlab.com/veloren/veloren.git?branch=master#cc6a4c92f52daf20a8e35d42417ad686cf6fdb7d"
 dependencies = [
- "hashbrown 0.11.2",
+ "hashbrown 0.12.1",
  "num_cpus",
  "rayon",
  "scopeguard",
- "specs 0.16.2",
+ "specs 0.18.0",
  "tracing",
  "vek",
  "veloren-common",
@@ -2276,15 +2286,15 @@ dependencies = [
 [[package]]
 name = "veloren-common-systems"
 version = "0.10.0"
-source = "git+https://gitlab.com/veloren/veloren.git?branch=master#f2ece25b79a1c9138f59737e8fb04808257a8229"
+source = "git+https://gitlab.com/veloren/veloren.git?branch=master#cc6a4c92f52daf20a8e35d42417ad686cf6fdb7d"
 dependencies = [
- "hashbrown 0.11.2",
+ "hashbrown 0.12.1",
  "indexmap",
- "ordered-float",
+ "ordered-float 3.0.0",
  "rand",
  "rayon",
  "slab",
- "specs 0.16.2",
+ "specs 0.18.0",
  "tracing",
  "vek",
  "veloren-common",
@@ -2296,7 +2306,7 @@ dependencies = [
 [[package]]
 name = "veloren-network"
 version = "0.3.0"
-source = "git+https://gitlab.com/veloren/veloren.git?branch=master#f2ece25b79a1c9138f59737e8fb04808257a8229"
+source = "git+https://gitlab.com/veloren/veloren.git?branch=master#cc6a4c92f52daf20a8e35d42417ad686cf6fdb7d"
 dependencies = [
  "async-channel",
  "async-trait",
@@ -2323,7 +2333,7 @@ dependencies = [
 [[package]]
 name = "veloren-network-protocol"
 version = "0.6.1"
-source = "git+https://gitlab.com/veloren/veloren.git?branch=master#f2ece25b79a1c9138f59737e8fb04808257a8229"
+source = "git+https://gitlab.com/veloren/veloren.git?branch=master#cc6a4c92f52daf20a8e35d42417ad686cf6fdb7d"
 dependencies = [
  "async-trait",
  "bitflags",
