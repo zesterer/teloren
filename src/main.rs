@@ -21,12 +21,15 @@ use veloren_client::{
 };
 use veloren_common::{
     clock::Clock, comp, comp::inventory::slot::Slot, comp::InputKind, terrain::SpriteKind,
-    uid::UidAllocator, vol::ReadVol,
+    uid::UidAllocator, vol::ReadVol, ViewDistances,
 };
 
 fn main() {
     let screen_size = Vec2::new(80, 25);
-    let view_distance = 12;
+    let view_distances = ViewDistances {
+        terrain: 12,
+        entity: 12,
+    };
     let tps = 60;
     let mut is_glide_active: bool = false;
     let mut invpos = 1;
@@ -146,15 +149,13 @@ fn main() {
                 .find(|x| x.character.alias == character_name);
             if character.is_some() {
                 let character_id = character.unwrap().character.id.unwrap();
-                client.request_character(character_id);
+                client.request_character(character_id, view_distances);
                 break;
             } else {
                 panic!("Character name not found!");
             }
         }
     }
-
-    client.set_view_distance(view_distance);
 
     // Spawn input thread
     let stdin = stdin();
