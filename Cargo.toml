@@ -13,8 +13,8 @@ clap = "3.1"
 specs = { git = "https://github.com/amethyst/specs.git", rev = "d4435bdf496cf322c74886ca09dd8795984919b4" }
 tokio = "1"
 
-veloren-client = { git = "https://gitlab.com/veloren/veloren.git", branch = "master" }
-veloren-common = { git = "https://gitlab.com/veloren/veloren.git", branch = "master", features = ["no-assets"] }
+veloren-client = { git = "https://gitlab.com/veloren/veloren.git", tag = "weekly" }
+veloren-common = { git = "https://gitlab.com/veloren/veloren.git", tag = "weekly", features = ["no-assets"] }
 
 [profile.dev]
 opt-level = 2
