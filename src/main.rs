@@ -4,7 +4,6 @@ use crate::display::Display;
 use clap::{Arg, Command};
 use std::{
     io::{stdin, stdout, Write},
-    // process,
     sync::{mpsc, Arc},
     thread,
     time::Duration,
@@ -38,7 +37,6 @@ fn main() {
     let mut arrowed: Option<Slot> = None;
     let mut use_slotid: Option<Slot> = None;
     let mut use_item: bool = false;
-    // let mut swap: bool = false;
     let mut inv_toggle: bool = false;
     let mut arrowedpos = 0;
     let mut is_jump_active: bool = false;
@@ -116,9 +114,7 @@ fn main() {
                 &mut mismatched_server_info,
                 username,
                 password,
-                |provider| {
-                    provider == "https://auth.veloren.net"
-                },
+                |provider| provider == "https://auth.veloren.net",
             )
             .await
         })
@@ -126,17 +122,6 @@ fn main() {
 
     println!("Server info: {:?}", client.server_info());
     println!("Players: {:?}", client.player_list());
-
-    // runtime
-    //     .block_on(
-    //         client.register(username.to_string(), password.to_string(), |provider| {
-    //             provider == "https://auth.veloren.net"
-    //         }),
-    //     )
-    //     .unwrap_or_else(|err| {
-    //         println!("Failed to register: {:?}", err);
-    //         process::exit(1);
-    //     });
 
     // Request character
     let mut clock = Clock::new(Duration::from_secs_f64(1.0 / tps as f64));
@@ -146,14 +131,14 @@ fn main() {
         assert!(client
             .tick(comp::ControllerInputs::default(), clock.dt(), |_| ())
             .is_ok());
-        if client.character_list().characters.len() > 0 {
+        if !client.character_list().characters.is_empty() {
             let character = client
                 .character_list()
                 .characters
                 .iter()
                 .find(|x| x.character.alias == character_name);
-            if character.is_some() {
-                let character_id = character.unwrap().character.id.unwrap();
+            if let Some(character) = character {
+                let character_id = character.character.id.unwrap();
                 client.request_character(character_id, view_distances);
                 break;
             } else {
@@ -221,7 +206,7 @@ fn main() {
             .read_storage::<comp::Pos>()
             .get(client.entity())
             .map(|pos| pos.0)
-            .unwrap_or(Vec3::zero());
+            .unwrap_or_else(Vec3::zero);
         let to_screen_pos = |pos: Vec2<f32>, zoom_level: f32| {
             ((pos - Vec2::from(player_pos)) * Vec2::new(1.0, -1.0) / zoom_level
                 + screen_size.map(|e| e as f32) / 2.0)
@@ -270,8 +255,8 @@ fn main() {
                 TermEvent::Key(Key::Char('u')) => client.accept_invite(),
                 TermEvent::Key(Key::Char('i')) => client.decline_invite(),
                 TermEvent::Key(Key::Char('t')) => inv_toggle = !inv_toggle,
-                TermEvent::Key(Key::Down) => invpos = invpos + 1,
-                TermEvent::Key(Key::Up) => invpos = invpos - 1,
+                TermEvent::Key(Key::Down) => invpos += 1,
+                TermEvent::Key(Key::Up) => invpos -= 1,
                 TermEvent::Key(Key::Right) => match arrowedpos {
                     0 => {
                         arrowed1 = arrowed;
@@ -291,12 +276,9 @@ fn main() {
                     use_slotid = arrowed;
                     use_item = true;
                 }
-                TermEvent::Mouse(me) => match me {
-                    MouseEvent::Press(_, x, y) => {
-                        tgt_pos = Some(from_screen_pos(Vec2::new(x, y), zoom_level))
-                    }
-                    _ => {}
-                },
+                TermEvent::Mouse(MouseEvent::Press(_, x, y)) => {
+                    tgt_pos = Some(from_screen_pos(Vec2::new(x, y), zoom_level))
+                }
                 TermEvent::Key(Key::Char(' ')) => {
                     if is_jump_active {
                         client.handle_input(InputKind::Jump, false, None, None);
@@ -341,7 +323,7 @@ fn main() {
             } else {
                 inputs.move_dir = (tp - Vec2::from(player_pos))
                     .try_normalized()
-                    .unwrap_or(Vec2::zero());
+                    .unwrap_or_else(Vec2::zero);
             }
         }
         let events = client.tick(inputs, clock.dt(), |_| ()).unwrap();
@@ -349,16 +331,14 @@ fn main() {
         let inventory = inventory_storage.get(client.entity());
         // Tick client
         for event in events {
-            match event {
-                Event::Chat(msg) => match msg.chat_type {
+            if let Event::Chat(msg) = event {
+                match msg.chat_type {
                     comp::ChatType::World(_) => chat_log.push(msg.message),
                     comp::ChatType::Group(_, _) => {
                         chat_log.push(format!("[Group] {}", msg.message))
                     }
-
                     _ => {}
-                },
-                _ => {}
+                }
             }
         }
 
@@ -388,7 +368,7 @@ fn main() {
                     for (k, z) in (-2..16).enumerate() {
                         block_z = wpos.z - z;
 
-                        if let Some(b) = state.terrain().get(wpos + Vec3::unit_z() * -z).ok() {
+                        if let Ok(b) = state.terrain().get(wpos + Vec3::unit_z() * -z) {
                             let sprite = b.get_sprite();
                             if sprite.is_some() && sprite.unwrap() != SpriteKind::Empty {
                                 let sprite2 = sprite.unwrap();
@@ -425,12 +405,10 @@ fn main() {
                                 if block_char.is_none() {
                                     block_char = Some(if k < level_chars.len() {
                                         level_chars[k as usize]
+                                    } else if block_z % 2 == 0 {
+                                        'O'
                                     } else {
-                                        if block_z % 2 == 0 {
-                                            'O'
-                                        } else {
-                                            '0'
-                                        }
+                                        '0'
                                     });
                                 }
                                 break;
@@ -441,7 +419,7 @@ fn main() {
                     let col = match block {
                         Some(block) => match block {
                             block if block.is_fluid() => Rgb::one(),
-                            _ => block.get_color().unwrap_or(Rgb::one()),
+                            _ => block.get_color().unwrap_or_else(Rgb::one),
                         },
                         None => Rgb::new(0, 255, 255),
                     };
@@ -467,51 +445,53 @@ fn main() {
             for o in objs.join() {
                 let pos = positions.get(o);
                 let body = bodies.get(o);
-                if pos.is_some() && body.is_some() {
-                    let scr_pos = to_screen_pos(Vec2::from(pos.unwrap().0), zoom_level);
-                    let character = match body.unwrap() {
-                        Body::Humanoid(humanoid) => match humanoid.species {
-                            humanoid::Species::Danari => '@',
-                            humanoid::Species::Dwarf => '@',
-                            humanoid::Species::Elf => '@',
-                            humanoid::Species::Human => '@',
-                            humanoid::Species::Orc => '@',
-                            humanoid::Species::Draugr => '@',
-                        },
-                        Body::QuadrupedLow(_) => '4',
-                        Body::QuadrupedSmall(_) => 'q',
-                        Body::QuadrupedMedium(_) => 'Q',
-                        Body::BirdMedium(_) => 'b',
-                        Body::BirdLarge(_) => 'B',
-                        Body::FishSmall(_) => 'f',
-                        Body::FishMedium(_) => 'F',
-                        Body::BipedLarge(_) => '2',
-                        Body::BipedSmall(_) => '2',
-                        Body::Object(_) => 'o',
-                        Body::Golem(_) => 'G',
-                        Body::Dragon(_) => 'D',
-                        Body::Theropod(_) => 'T',
-                        Body::Ship(_) => 'S',
-                        Body::Arthropod(_) => 'A',
-                        Body::ItemDrop(_) => 'I',
-                        //_ => '?'
-                    };
+                if let Some(pos) = pos {
+                    if let Some(body) = body {
+                        let scr_pos = to_screen_pos(Vec2::from(pos.0), zoom_level);
+                        let character = match body {
+                            Body::Humanoid(humanoid) => match humanoid.species {
+                                humanoid::Species::Danari => '@',
+                                humanoid::Species::Dwarf => '@',
+                                humanoid::Species::Elf => '@',
+                                humanoid::Species::Human => '@',
+                                humanoid::Species::Orc => '@',
+                                humanoid::Species::Draugr => '@',
+                            },
+                            Body::QuadrupedLow(_) => '4',
+                            Body::QuadrupedSmall(_) => 'q',
+                            Body::QuadrupedMedium(_) => 'Q',
+                            Body::BirdMedium(_) => 'b',
+                            Body::BirdLarge(_) => 'B',
+                            Body::FishSmall(_) => 'f',
+                            Body::FishMedium(_) => 'F',
+                            Body::BipedLarge(_) => '2',
+                            Body::BipedSmall(_) => '2',
+                            Body::Object(_) => 'o',
+                            Body::Golem(_) => 'G',
+                            Body::Dragon(_) => 'D',
+                            Body::Theropod(_) => 'T',
+                            Body::Ship(_) => 'S',
+                            Body::Arthropod(_) => 'A',
+                            Body::ItemDrop(_) => 'I',
+                            //_ => '?'
+                        };
 
-                    if scr_pos
-                        .map2(screen_size, |e, sz| e >= 0 && e < sz as i32)
-                        .reduce_and()
-                    {
-                        write!(
-                            display.at((scr_pos.x as u16, scr_pos.y as u16)),
-                            "{}{}",
-                            color::White.fg_str(),
-                            character
-                        )
-                        .unwrap();
+                        if scr_pos
+                            .map2(screen_size, |e, sz| e >= 0 && e < sz as i32)
+                            .reduce_and()
+                        {
+                            write!(
+                                display.at((scr_pos.x as u16, scr_pos.y as u16)),
+                                "{}{}",
+                                color::White.fg_str(),
+                                character
+                            )
+                            .unwrap();
+                        }
                     }
                 }
             }
-            if inv_toggle == false {
+            if !inv_toggle {
                 write!(
                     display.at((0, screen_size.y + 0)),
                     "/------- Controls ------\\"
@@ -657,7 +637,7 @@ fn main() {
                 write!(
                     display.at((30, screen_size.y + 10 - i as u16)),
                     "{}",
-                    msg.get(0..48).unwrap_or(&msg)
+                    msg.get(0..48).unwrap_or(msg)
                 )
                 .unwrap();
             }
