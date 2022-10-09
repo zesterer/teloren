@@ -50,46 +50,41 @@ fn main() {
             Arg::new("username")
                 .long("username")
                 .value_name("USERNAME")
-                .help("Set the username used to log in")
-                .takes_value(true),
+                .help("Set the username used to log in"),
         )
         .arg(
             Arg::new("password")
                 .long("password")
                 .value_name("PASSWORD")
-                .help("Set the password to log in with")
-                .takes_value(true),
+                .help("Set the password to log in with"),
         )
         .arg(
             Arg::new("server")
                 .long("server")
                 .value_name("SERVER_ADDR")
-                .help("Set the server address")
-                .takes_value(true),
+                .help("Set the server address"),
         )
         .arg(
             Arg::new("port")
                 .long("port")
                 .value_name("PORT")
-                .help("Set the server port")
-                .takes_value(true),
+                .help("Set the server port"),
         )
         .arg(
             Arg::new("character")
                 .long("character")
                 .value_name("CHARACTER")
                 .help("Select the character to play")
-                .required(true)
-                .takes_value(true),
+                .required(true),
         )
         .get_matches();
 
     // Find arguments
-    let server_addr = matches.value_of("server").unwrap_or("server.veloren.net");
-    let server_port = matches.value_of("port").unwrap_or("14004");
-    let username = matches.value_of("username").unwrap_or("teloren_user");
-    let password = matches.value_of("password").unwrap_or("");
-    let character_name = matches.value_of("character").unwrap_or("");
+    let server_addr: String = matches.get_one("server").cloned().unwrap_or("server.veloren.net".into());
+    let server_port: u16 = matches.get_one("port").cloned().unwrap_or(14004);
+    let username: String = matches.get_one("username").cloned().unwrap_or("teloren_user".into());
+    let password: String = matches.get_one("password").cloned().unwrap_or_default();
+    let character_name: String = matches.get_one("character").cloned().unwrap_or_default();
     // Parse server socket
 
     let server_spec = format!("{}:{}", server_addr, server_port);
@@ -112,8 +107,8 @@ fn main() {
                 },
                 Arc::clone(&runtime2),
                 &mut mismatched_server_info,
-                username,
-                password,
+                &username,
+                &password,
                 |provider| provider == "https://auth.veloren.net",
             )
             .await
