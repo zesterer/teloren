@@ -7,6 +7,7 @@ use termion::{
 use vek::*;
 
 pub struct Display {
+    #[allow(dead_code)]
     size: Vec2<u16>,
     stdout: MouseTerminal<RawTerminal<Stdout>>,
 }
@@ -25,6 +26,7 @@ impl Display {
         write!(self.stdout, "{}{}", clear::All, cursor::Hide).unwrap();
     }
 
+    #[allow(dead_code)]
     pub fn clear_with(&mut self, c: char) {
         for y in 1..=self.size.y {
             write!(self.stdout, "{}", cursor::Goto(1, y + 1)).unwrap();

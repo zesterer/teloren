@@ -4,7 +4,7 @@ use crate::display::Display;
 use clap::{Arg, Command};
 use std::{
     io::{stdin, stdout, Write},
-    process,
+    // process,
     sync::{mpsc, Arc},
     thread,
     time::Duration,
@@ -114,6 +114,11 @@ fn main() {
                 },
                 Arc::clone(&runtime2),
                 &mut mismatched_server_info,
+                username,
+                password,
+                |provider| {
+                    provider == "https://auth.veloren.net"
+                },
             )
             .await
         })
@@ -122,16 +127,16 @@ fn main() {
     println!("Server info: {:?}", client.server_info());
     println!("Players: {:?}", client.player_list());
 
-    runtime
-        .block_on(
-            client.register(username.to_string(), password.to_string(), |provider| {
-                provider == "https://auth.veloren.net"
-            }),
-        )
-        .unwrap_or_else(|err| {
-            println!("Failed to register: {:?}", err);
-            process::exit(1);
-        });
+    // runtime
+    //     .block_on(
+    //         client.register(username.to_string(), password.to_string(), |provider| {
+    //             provider == "https://auth.veloren.net"
+    //         }),
+    //     )
+    //     .unwrap_or_else(|err| {
+    //         println!("Failed to register: {:?}", err);
+    //         process::exit(1);
+    //     });
 
     // Request character
     let mut clock = Clock::new(Duration::from_secs_f64(1.0 / tps as f64));
@@ -375,6 +380,7 @@ fn main() {
                             * zoom_level)
                         .map(|e| e.floor() as i32);
 
+                    #[allow(unused_assignments)]
                     let mut block_z = 0;
                     let mut block = None;
                     let mut block_char = None;
