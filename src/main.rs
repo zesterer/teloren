@@ -80,9 +80,15 @@ fn main() {
         .get_matches();
 
     // Find arguments
-    let server_addr: String = matches.get_one("server").cloned().unwrap_or("server.veloren.net".into());
+    let server_addr: String = matches
+        .get_one("server")
+        .cloned()
+        .unwrap_or("server.veloren.net".into());
     let server_port: u16 = matches.get_one("port").cloned().unwrap_or(14004);
-    let username: String = matches.get_one("username").cloned().unwrap_or("teloren_user".into());
+    let username: String = matches
+        .get_one("username")
+        .cloned()
+        .unwrap_or("teloren_user".into());
     let password: String = matches.get_one("password").cloned().unwrap_or_default();
     let character_name: String = matches.get_one("character").cloned().unwrap_or_default();
     // Parse server socket
@@ -328,10 +334,13 @@ fn main() {
         for event in events {
             if let Event::Chat(msg) = event {
                 match msg.chat_type {
-                    comp::ChatType::World(_) => chat_log.push(msg.message),
-                    comp::ChatType::Group(_, _) => {
-                        chat_log.push(format!("[Group] {}", msg.message))
+                    comp::ChatType::World(_) => {
+                        chat_log.push(msg.content().as_plain().unwrap_or_default().to_string())
                     }
+                    comp::ChatType::Group(_, _) => chat_log.push(format!(
+                        "[Group] {}",
+                        msg.content().as_plain().unwrap_or_default()
+                    )),
                     _ => {}
                 }
             }
