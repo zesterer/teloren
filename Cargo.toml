@@ -7,14 +7,15 @@ edition = "2021"
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
-vek = { version = "0.15.8", features = ["serde"] }
+vek = { version = "0.15.10", features = ["serde"] }
 termion = "2.0"
-clap = { version = "4.0", features = ["wrap_help"] }
+clap = { version = "4.3", features = ["wrap_help"] }
 specs = { git = "https://github.com/amethyst/specs.git", rev = "d4435bdf496cf322c74886ca09dd8795984919b4" }
 tokio = "1"
 
 veloren-client = { git = "https://gitlab.com/veloren/veloren.git", tag = "weekly" }
 veloren-common = { git = "https://gitlab.com/veloren/veloren.git", tag = "weekly", features = ["no-assets"] }
+veloren-common-net = { git = "https://gitlab.com/veloren/veloren.git", tag = "weekly" }
 
 [profile.dev]
 opt-level = 2

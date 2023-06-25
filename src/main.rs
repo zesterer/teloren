@@ -16,12 +16,13 @@ use termion::{
 use tokio::runtime::Runtime;
 use vek::*;
 use veloren_client::{
-    addr::ConnectionArgs, Client, Event, Join, Marker, MarkerAllocator, WorldExt,
+    addr::ConnectionArgs, Client, Event, Join, WorldExt,
 };
 use veloren_common::{
     clock::Clock, comp, comp::inventory::slot::Slot, comp::InputKind, terrain::SpriteKind,
-    uid::UidAllocator, vol::ReadVol, ViewDistances,
+    vol::ReadVol, ViewDistances,
 };
+use veloren_common_net::sync::WorldSyncExt;
 
 fn main() {
     let screen_size = Vec2::new(80, 25);
@@ -187,8 +188,7 @@ fn main() {
             if let Some(entity) = client
                 .state()
                 .ecs()
-                .read_resource::<UidAllocator>()
-                .retrieve_entity_internal(uid.id())
+                .entity_from_uid(uid)
             {
                 if let Some(player) = client.state().read_storage::<comp::Player>().get(entity) {
                     player.alias.clone()
