@@ -19,12 +19,6 @@ checksum = "f26201604c87b1e01bd3d98f8d5d9a8fcbb815e8cedb41ffccbeb4bf593a35fe"
 
 [[package]]
 name = "ahash"
-version = "0.3.8"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "e8fd72866655d1904d6b0997d0b07ba561047d070fbe29de039031c641b61217"
-
-[[package]]
-name = "ahash"
 version = "0.4.8"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "0453232ace82dee0dd0b4c87a59bd90f7b53b314f3e0f61fe2ee7c8a16482289"
@@ -139,12 +133,6 @@ name = "arrayref"
 version = "0.3.7"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "6b4930d2cb77ce62f89ee5d5289b4ac049559b1c45539271f5ed4fdc7db34545"
-
-[[package]]
-name = "arrayvec"
-version = "0.5.2"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "23b62fc65de8e4e7f52534fb52b0f3ed04746ae267519eef2a83941e8085068b"
 
 [[package]]
 name = "arrayvec"
@@ -280,7 +268,7 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "23285ad32269793932e830392f2fe2f83e26488fd3ec778883a93c8323735780"
 dependencies = [
  "arrayref",
- "arrayvec 0.7.4",
+ "arrayvec",
  "constant_time_eq",
 ]
 
@@ -749,16 +737,6 @@ dependencies = [
 
 [[package]]
 name = "hashbrown"
-version = "0.7.2"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "96282e96bfcd3da0d3aa9938bedf1e50df3269b6db08b4876d2da0bb1a0841cf"
-dependencies = [
- "ahash 0.3.8",
- "autocfg",
-]
-
-[[package]]
-name = "hashbrown"
 version = "0.9.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "d7afe4a420e3fe79967a00898cc1f4db7c8a49a9333a29f8a4bd76a253d5cd04"
@@ -1067,12 +1045,6 @@ dependencies = [
  "wasi",
  "windows-sys",
 ]
-
-[[package]]
-name = "mopa"
-version = "0.2.2"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "a785740271256c230f57462d3b83e52f998433a7062fc18f96d5999474a9f915"
 
 [[package]]
 name = "nom"
@@ -1798,26 +1770,12 @@ dependencies = [
 
 [[package]]
 name = "shred"
-version = "0.10.2"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "c5f08237e667ac94ad20f8878b5943d91a93ccb231428446c57c21c57779016d"
-dependencies = [
- "arrayvec 0.5.2",
- "hashbrown 0.7.2",
- "mopa",
- "rayon",
- "smallvec",
- "tynm",
-]
-
-[[package]]
-name = "shred"
 version = "0.15.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "dc6b2cd1ccb08cf2b25d75c936e0cc9c8cb93c39a83814956da32653236338c0"
 dependencies = [
  "ahash 0.7.7",
- "arrayvec 0.7.4",
+ "arrayvec",
  "atomic_refcell",
  "rayon",
  "shred-derive",
@@ -1901,21 +1859,6 @@ dependencies = [
 
 [[package]]
 name = "specs"
-version = "0.16.1"
-source = "git+https://github.com/amethyst/specs.git?rev=d4435bdf496cf322c74886ca09dd8795984919b4#d4435bdf496cf322c74886ca09dd8795984919b4"
-dependencies = [
- "crossbeam-queue",
- "hashbrown 0.9.1",
- "hibitset",
- "log",
- "rayon",
- "shred 0.10.2",
- "shrev",
- "tuple_utils 0.3.0",
-]
-
-[[package]]
-name = "specs"
 version = "0.20.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "a60eabdfd5a80e458c3e7bcc9f1076d6ce3cc8ddb71d69691f00fc0de735a635"
@@ -1927,10 +1870,10 @@ dependencies = [
  "nougat",
  "rayon",
  "serde",
- "shred 0.15.0",
+ "shred",
  "shrev",
  "specs-derive",
- "tuple_utils 0.4.0",
+ "tuple_utils",
 ]
 
 [[package]]
@@ -2033,7 +1976,7 @@ name = "teloren"
 version = "0.1.0"
 dependencies = [
  "clap",
- "specs 0.16.1",
+ "specs",
  "termion",
  "tokio",
  "vek",
@@ -2217,12 +2160,6 @@ checksum = "3528ecfd12c466c6f163363caf2d02a71161dd5e1cc6ae7b34207ea2d42d81ed"
 
 [[package]]
 name = "tuple_utils"
-version = "0.3.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "44834418e2c5b16f47bedf35c28e148db099187dd5feee6367fb2525863af4f1"
-
-[[package]]
-name = "tuple_utils"
 version = "0.4.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "cffaaf9392ef73cd30828797152476aaa2fa37a17856934fa63d4843f34290e9"
@@ -2311,7 +2248,7 @@ dependencies = [
  "num",
  "quinn",
  "rayon",
- "specs 0.20.0",
+ "specs",
  "tokio",
  "tracing",
  "vek",
@@ -2352,7 +2289,7 @@ dependencies = [
  "sha2",
  "slab",
  "slotmap",
- "specs 0.20.0",
+ "specs",
  "spin_sleep",
  "strum",
  "tracing",
@@ -2391,7 +2328,7 @@ name = "veloren-common-ecs"
 version = "0.10.0"
 source = "git+https://gitlab.com/veloren/veloren.git?tag=weekly#d690f256159d6ec5fb07cb3047692b5c35278a0a"
 dependencies = [
- "specs 0.20.0",
+ "specs",
  "tracing",
  "veloren-common-base",
 ]
@@ -2407,7 +2344,7 @@ dependencies = [
  "image",
  "num-traits",
  "serde",
- "specs 0.20.0",
+ "specs",
  "sum_type",
  "tracing",
  "vek",
@@ -2423,7 +2360,7 @@ dependencies = [
  "num_cpus",
  "rayon",
  "scopeguard",
- "specs 0.20.0",
+ "specs",
  "timer-queue",
  "tracing",
  "vek",
@@ -2442,7 +2379,7 @@ dependencies = [
  "ordered-float",
  "rand",
  "rayon",
- "specs 0.20.0",
+ "specs",
  "tracing",
  "vek",
  "veloren-common",
