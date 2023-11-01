@@ -117,6 +117,7 @@ fn main() {
                 &username,
                 &password,
                 |provider| provider == "https://auth.veloren.net",
+                &|_| {},
             )
             .await
         })
