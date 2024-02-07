@@ -15,9 +15,7 @@ use termion::{
 };
 use tokio::runtime::Runtime;
 use vek::*;
-use veloren_client::{
-    addr::ConnectionArgs, Client, Event, Join, WorldExt,
-};
+use veloren_client::{addr::ConnectionArgs, Client, Event, Join, WorldExt};
 use veloren_common::{
     clock::Clock, comp, comp::inventory::slot::Slot, comp::InputKind, terrain::SpriteKind,
     vol::ReadVol, ViewDistances,
@@ -116,8 +114,10 @@ fn main() {
                 &mut mismatched_server_info,
                 &username,
                 &password,
+                None,
                 |provider| provider == "https://auth.veloren.net",
                 &|_| {},
+                |_| {},
             )
             .await
         })
@@ -132,7 +132,7 @@ fn main() {
 
     while client.presence().is_none() {
         assert!(client
-            .tick(comp::ControllerInputs::default(), clock.dt(), |_| ())
+            .tick(comp::ControllerInputs::default(), clock.dt())
             .is_ok());
         if !client.character_list().characters.is_empty() {
             let character = client
@@ -186,11 +186,7 @@ fn main() {
 
         //Get entity username from UID
         let inviter_username = if let Some(uid) = inviter_uid {
-            if let Some(entity) = client
-                .state()
-                .ecs()
-                .entity_from_uid(uid)
-            {
+            if let Some(entity) = client.state().ecs().entity_from_uid(uid) {
                 if let Some(player) = client.state().read_storage::<comp::Player>().get(entity) {
                     player.alias.clone()
                 } else {
@@ -328,7 +324,7 @@ fn main() {
                     .unwrap_or_else(Vec2::zero);
             }
         }
-        let events = client.tick(inputs, clock.dt(), |_| ()).unwrap();
+        let events = client.tick(inputs, clock.dt()).unwrap();
         let inventory_storage = client.state().ecs().read_storage::<comp::Inventory>();
         let inventory = inventory_storage.get(client.entity());
         // Tick client
@@ -478,6 +474,7 @@ fn main() {
                             Body::Ship(_) => 'S',
                             Body::Arthropod(_) => 'A',
                             Body::ItemDrop(_) => 'I',
+                            Body::Crustacean(_) => 'C',
                             //_ => '?'
                         };
 

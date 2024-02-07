@@ -7,8 +7,8 @@ edition = "2021"
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
-vek = { version = "0.15", features = ["serde"] }
-termion = "2.0"
+vek = { version = "0.15.8", features = ["serde"] }
+termion = "3.0"
 clap = { version = "4.4", features = ["wrap_help"] }
 specs = { version = "0.20", features = ["nightly"] }
 tokio = "1"
@@ -20,3 +20,6 @@ veloren-common-net = { git = "https://gitlab.com/veloren/veloren.git", tag = "we
 [profile.dev]
 opt-level = 2
 overflow-checks = false
+
+[patch.crates-io]
+shred = { git = "https://github.com/amethyst/shred.git", rev = "5d52c6fc390dd04c12158633e77591f6523d1f85" }
