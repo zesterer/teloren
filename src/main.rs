@@ -118,6 +118,7 @@ fn main() {
                 |provider| provider == "https://auth.veloren.net",
                 &|_| {},
                 |_| {},
+                Default::default(),
             )
             .await
         })
